@@ -541,7 +541,7 @@
     
     async function loadRSITab() {
         const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال محاسبه RSI برای ۲۰ ارز برتر...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال محاسبه RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
         document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
         
         if (!marketData.length) {
@@ -549,62 +549,45 @@
             return;
         }
         
-        const top20 = marketData.slice(0, 20);
+        const stablecoins = ['tether', 'usd-coin', 'dai', 'binance-usd', 'true-usd', 'paxos-standard', 'usdd', 'frax'];
+        const filtered = marketData.filter(c => !stablecoins.includes(c.id)).slice(0, 300);
+        
         const rsiResults = {};
         
-        // محاسبه RSI ساده بر اساس تغییرات قیمت ۲۴h (تقریبی)
-        // RSI واقعی از API گرفته میشه اگه TAAPI_KEY موجود باشه
-        if (TAAPI_KEY !== 'YOUR_TAAPI_KEY') {
-            for (const coin of top20) {
-                try {
-                    const res = await fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=binance&symbol=${coin.symbol.toUpperCase()}/USDT&interval=1h`);
-                    const data = await res.json();
-                    if (data && data.value != null) {
-                        rsiResults[coin.id] = data.value;
-                    }
-                } catch(e) {}
-            }
-        } else {
-            // محاسبه تقریبی از روی تغییرات قیمت
-            top20.forEach(coin => {
-                const change = coin.price_change_percentage_24h || 0;
-                rsiResults[coin.id] = 50 + (change * 2);
-                if (rsiResults[coin.id] > 100) rsiResults[coin.id] = 100;
-                if (rsiResults[coin.id] < 0) rsiResults[coin.id] = 0;
-            });
+        const batchSize = 5;
+        for (let i = 0; i < filtered.length; i += batchSize) {
+            const batch = filtered.slice(i, i + batchSize);
+            const promises = batch.map(coin =>
+                fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=binance&symbol=${coin.symbol.toUpperCase()}/USDT&interval=1h&backtrack=1`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.value != null) {
+                            rsiResults[coin.id] = data.value;
+                        }
+                    })
+                    .catch(() => {})
+            );
+            await Promise.all(promises);
+            
+            const done = Math.min(i + batchSize, filtered.length);
+            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال محاسبه RSI...<br><small>${done} از ${filtered.length} ارز بررسی شد</small></div>`;
         }
         
         rsiData = rsiResults;
         
-        const overbought = top20.filter(c => (rsiResults[c.id] || 0) >= 70).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
-        const oversold = top20.filter(c => (rsiResults[c.id] || 0) <= 30).sort((a,b) => (rsiResults[a.id]||0) - (rsiResults[b.id]||0));
+        // فقط ارزهای RSI ≥ 70 یا RSI ≤ 30
+        const alertCoins = filtered.filter(c => {
+            const rsi = rsiResults[c.id] || 0;
+            return rsi >= 70 || rsi <= 30;
+        }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
         
-        let html = '';
-        
-        if (overbought.length > 0) {
-            html += '<div class="section-title" style="color:var(--red)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>🔴 اشباع خرید (RSI ≥ ۷۰)</div>';
-            overbought.forEach(c => {
-                const ch = c.price_change_percentage_24h;
-                html += coinHTML(c, ch, ch>=0, getWatchlist().some(w=>w.id===c.id), false, rsiResults[c.id]);
-            });
+        if (alertCoins.length > 0) {
+            document.getElementById('resultsCount').innerHTML = `📊 RSI - ${alertCoins.length} ارز در محدوده اشباع`;
+            renderCoins(alertCoins, container, false, true);
         } else {
-            html += '<div class="section-title" style="color:var(--red)">🔴 اشباع خرید (RSI ≥ ۷۰)</div>';
-            html += '<div class="empty">هیچ ارزی در محدوده اشباع خرید نیست</div>';
+            container.innerHTML = '<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۷۰ یا RSI ≤ ۳۰) نیست</div>';
+            document.getElementById('resultsCount').innerHTML = `📊 RSI - ${Object.keys(rsiResults).length} ارز بررسی شد`;
         }
-        
-        if (oversold.length > 0) {
-            html += '<div class="section-title" style="color:var(--green);margin-top:24px"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17h2v-6h-2v6zm0-8h2V7h-2v4z"/></svg>🟢 اشباع فروش (RSI ≤ ۳۰)</div>';
-            oversold.forEach(c => {
-                const ch = c.price_change_percentage_24h;
-                html += coinHTML(c, ch, ch>=0, getWatchlist().some(w=>w.id===c.id), false, rsiResults[c.id]);
-            });
-        } else {
-            html += '<div class="section-title" style="color:var(--green);margin-top:24px">🟢 اشباع فروش (RSI ≤ ۳۰)</div>';
-            html += '<div class="empty">هیچ ارزی در محدوده اشباع فروش نیست</div>';
-        }
-        
-        container.innerHTML = html;
-        document.getElementById('resultsCount').innerHTML = '📊 RSI - ۲۰ ارز برتر';
     }
     
     function getWatchlist() {
