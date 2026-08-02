@@ -476,20 +476,21 @@
             return; 
         }
         
+        if (term.length < 2) {
+            document.getElementById('resultsCount').innerHTML = '🔍 حداقل ۲ حرف بنویسید...';
+            return;
+        }
+        
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال جستجو در کل بازار...</div>';
         document.getElementById('resultsCount').innerHTML = '🔍 در حال جستجو...';
         
         searchTimeout = setTimeout(async () => {
             try {
-                const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(term)}`);
-                const data = await res.json();
+                const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(term)}`);
+                const coins = await res.json();
                 
-                if (data.coins && data.coins.length > 0) {
-                    const ids = data.coins.slice(0, 50).map(c => c.id).join('%2C');
-                    const marketRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`);
-                    const coins = await marketRes.json();
-                    
-                    document.getElementById('resultsCount').innerHTML = `🔍 نتایج جستجو: ${data.coins.length} ارز پیدا شد (نمایش ${coins.length} مورد اول)`;
+                if (coins && coins.length > 0) {
+                    document.getElementById('resultsCount').innerHTML = `🔍 ${coins.length} ارز پیدا شد`;
                     renderCoins(coins, container, false);
                 } else {
                     container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
@@ -546,13 +547,13 @@
         
         const userId = tg?.initDataUnsafe?.user?.id || 'demo';
         if (idx > -1) {
-            fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' });
+            fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
         } else {
             fetch(`${API_URL}/watchlist/${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({id, name, symbol, image})
-            });
+            }).catch(()=>{});
         }
         
         if (currentTab === 'watchlist') loadWatchlist();
@@ -566,7 +567,7 @@
         saveWatchlist(list);
         
         const userId = tg?.initDataUnsafe?.user?.id || 'demo';
-        fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' });
+        fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
         
         loadWatchlist();
         if (currentTab === 'market') filterCoins();
@@ -610,12 +611,7 @@
         if (!coin || !price) return alert('لطفاً همه فیلدها را پر کن');
         
         const userId = tg?.initDataUnsafe?.user?.id || 'demo';
-        const alertData = {
-            coin_id: coin,
-            coin_name: coin,
-            target_price: price,
-            type: type
-        };
+        const alertData = { coin_id: coin, coin_name: coin, target_price: price, type: type };
         
         fetch(`${API_URL}/alerts/${userId}`, {
             method: 'POST',
@@ -628,7 +624,7 @@
             document.getElementById('alertCoin').value = '';
             document.getElementById('alertPrice').value = '';
             loadAlerts();
-        });
+        }).catch(() => alert('خطا در ذخیره هشدار'));
     }
     
     function deleteAlert(id) {
