@@ -576,7 +576,7 @@
         // فقط ارزهای RSI ≥ 70 یا RSI ≤ 30
         const alertCoins = filtered.filter(c => {
             const rsi = rsiResults[c.id];
-            return rsi != null && (rsi >= 70 || rsi <= 30);
+            return rsi != null && (rsi >= 65 || rsi <= 35);
         }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
         
         if (alertCoins.length > 0) {
