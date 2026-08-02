@@ -265,7 +265,7 @@
     </div>
     
     <div class="search-container">
-        <input type="text" class="search-box" id="searchInput" placeholder="🔍 جستجوی ارز در کل بازار (نام یا نماد)..." oninput="filterCoins()">
+        <input type="text" class="search-box" id="searchInput" placeholder="🔍 جستجوی سریع در ۱۰۰۰ ارز..." oninput="filterCoins()">
     </div>
     
     <div class="tabs">
@@ -291,7 +291,7 @@
     
     <div class="tab-content active" id="market-tab">
         <div class="coin-list" id="marketList">
-            <div class="loading"><div class="spinner"></div>در حال دریافت ارزها...</div>
+            <div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div>
         </div>
     </div>
     
@@ -339,9 +339,7 @@
     }
     
     let currentTab = 'market';
-    let currentPage = 1;
-    const perPage = 100;
-    let allLoaded = false;
+    let marketData = [];
     
     function switchTab(tab) {
         currentTab = tab;
@@ -358,15 +356,16 @@
         }
         if (tab === 'market') { 
             document.getElementById('searchInput').value = '';
-            currentPage = 1; allLoaded = false; fetchPage(); 
+            if (marketData.length === 0) fetchAllCoins();
+            else {
+                renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false);
+                document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز لود شده (نمایش ۱۰۰ ارز اول)`;
+            }
         }
         if (tab === 'trends') loadTrendsTab();
         if (tab === 'watchlist') loadWatchlist();
         if (tab === 'alerts') loadAlerts();
     }
-    
-    let marketData = [];
-    let searchTimeout;
     
     function formatPrice(price) {
         if (price == null) return 'N/A';
@@ -388,57 +387,47 @@
         return '$' + vol.toFixed(8);
     }
     
-    async function fetchPage() {
+    async function fetchAllCoins() {
         const container = document.getElementById('marketList');
-        if (currentPage === 1) {
-            container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت ارزها...</div>';
-        }
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...<br><small>ممکن است ۱۰ ثانیه طول بکشد</small></div>';
         
         try {
-            const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${currentPage}&sparkline=false&price_change_percentage=24h`);
-            const data = await res.json();
+            const pages = [1,2,3,4];
+            const results = await Promise.all(pages.map(page =>
+                fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false&price_change_percentage=24h`)
+                    .then(r => r.json())
+            ));
             
-            if (data.length < perPage) allLoaded = true;
+            marketData = results.flat();
+            localStorage.setItem('dc_market_cache', JSON.stringify({data: marketData, time: Date.now()}));
+            renderCoins(marketData.slice(0, 100), container, false);
+            document.getElementById('resultsCount').innerHTML = `📊 ۱۰۰۰ ارز لود شد (نمایش ۱۰۰ ارز اول)`;
             
-            if (currentPage === 1) {
-                marketData = data;
-                renderCoins(marketData, container, false);
-            } else {
-                marketData = [...marketData, ...data];
-                appendCoins(data, container);
-            }
-            
-            document.getElementById('resultsCount').innerHTML = `📊 نمایش ${marketData.length} ارز`;
-            
-            if (!allLoaded) {
+            if (marketData.length > 100) {
                 const loadMoreDiv = document.createElement('div');
                 loadMoreDiv.className = 'load-more';
                 loadMoreDiv.id = 'loadMoreBtn';
-                loadMoreDiv.innerHTML = '<button onclick="loadMore()">📥 بارگذاری ۱۰۰ ارز بیشتر</button>';
+                loadMoreDiv.innerHTML = '<button onclick="showAll()">📥 نمایش همه ۱۰۰۰ ارز</button>';
                 container.appendChild(loadMoreDiv);
             }
         } catch(e) {
-            if (currentPage === 1) container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>';
+            const cache = localStorage.getItem('dc_market_cache');
+            if (cache) {
+                const parsed = JSON.parse(cache);
+                marketData = parsed.data;
+                renderCoins(marketData.slice(0, 100), container, false);
+                document.getElementById('resultsCount').innerHTML = `⚠️ داده‌های ذخیره‌شده - ${marketData.length} ارز`;
+            } else {
+                container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>';
+            }
         }
     }
     
-    function loadMore() {
-        currentPage++;
-        document.getElementById('loadMoreBtn').innerHTML = '<div class="spinner"></div>';
-        fetchPage();
-    }
-    
-    function appendCoins(coins, container) {
-        const watchlist = getWatchlist();
-        let html = '';
-        coins.forEach(coin => {
-            const change = coin.price_change_percentage_24h;
-            const isUp = change >= 0;
-            const inWatchlist = watchlist.some(w => w.id === coin.id);
-            html += coinHTML(coin, change, isUp, inWatchlist);
-        });
-        document.getElementById('loadMoreBtn').remove();
-        container.insertAdjacentHTML('beforeend', html);
+    function showAll() {
+        const container = document.getElementById('marketList');
+        document.getElementById('loadMoreBtn')?.remove();
+        renderCoins(marketData, container, false);
+        document.getElementById('resultsCount').innerHTML = `📊 نمایش همه ${marketData.length} ارز`;
     }
     
     function coinHTML(coin, change, isUp, inWatchlist, isWatchlist = false) {
@@ -466,49 +455,27 @@
     }
     
     function filterCoins() {
-        clearTimeout(searchTimeout);
         const term = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('marketList');
         
         if (!term) { 
-            renderCoins(marketData, container, false); 
-            document.getElementById('resultsCount').innerHTML = `📊 نمایش ${marketData.length} ارز`;
+            renderCoins(marketData.slice(0, 100), container, false); 
+            document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز (نمایش ۱۰۰ ارز اول)`;
             return; 
         }
         
-        if (term.length < 2) {
-            document.getElementById('resultsCount').innerHTML = '🔍 حداقل ۲ حرف بنویسید...';
-            return;
+        const filtered = marketData.filter(c => 
+            c.name.toLowerCase().includes(term) || 
+            c.symbol.toLowerCase().includes(term)
+        );
+        
+        if (filtered.length > 0) {
+            document.getElementById('resultsCount').innerHTML = `🔍 ${filtered.length} ارز پیدا شد`;
+            renderCoins(filtered, container, false);
+        } else {
+            container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
+            document.getElementById('resultsCount').innerHTML = '';
         }
-        
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال جستجو...</div>';
-        document.getElementById('resultsCount').innerHTML = '🔍 در حال جستجو...';
-        
-        searchTimeout = setTimeout(async () => {
-            try {
-                const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(term)}`);
-                const data = await res.json();
-                
-                if (data.coins && data.coins.length > 0) {
-                    const ids = data.coins.slice(0, 50).map(c => c.id).join(',');
-                    const marketRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`);
-                    const coins = await marketRes.json();
-                    
-                    if (coins && coins.length > 0) {
-                        document.getElementById('resultsCount').innerHTML = `🔍 ${data.coins.length} ارز پیدا شد (نمایش ${coins.length} مورد)`;
-                        renderCoins(coins, container, false);
-                    } else {
-                        container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
-                        document.getElementById('resultsCount').innerHTML = '';
-                    }
-                } else {
-                    container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
-                    document.getElementById('resultsCount').innerHTML = '';
-                }
-            } catch(e) {
-                container.innerHTML = '<div class="empty">⚠️ خطا در جستجو. دوباره تلاش کنید.</div>';
-            }
-        }, 500);
     }
     
     function renderCoins(coins, container, isWatchlist) {
@@ -654,7 +621,7 @@
         container.innerHTML = html;
     }
     
-    fetchPage();
+    fetchAllCoins();
     loadAlerts();
 </script>
 </body>
