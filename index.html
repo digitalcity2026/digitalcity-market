@@ -452,8 +452,8 @@
     
     function getRSIBadge(rsi) {
         if (rsi == null) return '';
-        if (rsi >= 70) return `<span class="rsi-badge rsi-overbought">RSI ${rsi.toFixed(0)}</span>`;
-        if (rsi <= 30) return `<span class="rsi-badge rsi-oversold">RSI ${rsi.toFixed(0)}</span>`;
+        if (rsi >= 65) return `<span class="rsi-badge rsi-overbought">RSI ${rsi.toFixed(0)}</span>`;
+        if (rsi <= 35) return `<span class="rsi-badge rsi-oversold">RSI ${rsi.toFixed(0)}</span>`;
         return '';
     }
     
@@ -573,17 +573,17 @@
         
         rsiData = rsiResults;
         
-        // فقط ارزهای RSI ≥ 70 یا RSI ≤ 30
+        // فقط ارزهای RSI ≥ 65 یا RSI ≤ 35
         const alertCoins = filtered.filter(c => {
             const rsi = rsiResults[c.id];
             return rsi != null && (rsi >= 65 || rsi <= 35);
         }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
         
         if (alertCoins.length > 0) {
-            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع (≥۷۰ یا ≤۳۰)`;
+            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع (≥۶۵ یا ≤۳۵)`;
             renderCoins(alertCoins, container, false, true);
         } else {
-            container.innerHTML = '<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۷۰ یا RSI ≤ ۳۰) در تایم ۴ ساعته نیست</div>';
+            container.innerHTML = '<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۶۵ یا RSI ≤ ۳۵) در تایم ۴ ساعته نیست</div>';
             document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`;
         }
     }
