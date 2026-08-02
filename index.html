@@ -345,7 +345,6 @@
     if (tg) { tg.ready(); tg.expand(); }
     
     const API_URL = 'https://digitalcity-market.onrender.com/api';
-    const TAAPI_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbHVlIjoiNmE2ZjVjYWExZGMzM2EyOTU0NzFjNjZiIiwiaWF0IjoxNzg1NjgzMTY2LCJleHAiOjMzMjkwMTQ3MTY2fQ.C3UzYrTDfu_XBv_DzC00WK4Bi16k99oHEtQ3a3Kzfho';
     
     function toggleMenu() {
         document.getElementById('sideMenu').classList.toggle('active');
@@ -537,9 +536,43 @@
         }, 50);
     }
     
+    function calculateRSI(closes, period = 14) {
+        if (closes.length < period + 1) return null;
+        
+        let gains = 0, losses = 0;
+        for (let i = 1; i <= period; i++) {
+            const diff = closes[i] - closes[i-1];
+            if (diff >= 0) gains += diff;
+            else losses -= diff;
+        }
+        
+        let avgGain = gains / period;
+        let avgLoss = losses / period;
+        
+        if (avgLoss === 0) return 100;
+        
+        let rs = avgGain / avgLoss;
+        let rsi = 100 - (100 / (1 + rs));
+        
+        for (let i = period + 1; i < closes.length; i++) {
+            const diff = closes[i] - closes[i-1];
+            const gain = diff >= 0 ? diff : 0;
+            const loss = diff < 0 ? -diff : 0;
+            
+            avgGain = (avgGain * (period - 1) + gain) / period;
+            avgLoss = (avgLoss * (period - 1) + loss) / period;
+            
+            if (avgLoss === 0) return 100;
+            rs = avgGain / avgLoss;
+            rsi = 100 - (100 / (1 + rs));
+        }
+        
+        return rsi;
+    }
+    
     async function loadRSITab() {
         const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر (تایم ۴ ساعته)...<br><small>ممکن است ۴۵ ثانیه طول بکشد</small></div>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
         document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
         
         if (!marketData.length) {
@@ -551,32 +584,29 @@
         const filtered = marketData.filter(c => !stablecoins.includes(c.id)).slice(0, 300);
         
         const rsiResults = {};
-        const exchanges = ['binance', 'kucoin', 'bybit'];
         
         const batchSize = 5;
         for (let i = 0; i < filtered.length; i += batchSize) {
             const batch = filtered.slice(i, i + batchSize);
-            const promises = batch.map(coin => {
-                const tryExchange = (index) => {
-                    if (index >= exchanges.length) return Promise.resolve(null);
-                    const exchange = exchanges[index];
-                    return fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=${exchange}&symbol=${coin.symbol.toUpperCase()}/USDT&interval=4h&backtrack=1`)
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data && data.value != null) {
-                                rsiResults[coin.id] = data.value;
-                                return data.value;
-                            }
-                            return tryExchange(index + 1);
-                        })
-                        .catch(() => tryExchange(index + 1));
-                };
-                return tryExchange(0);
+            const promises = batch.map(async (coin) => {
+                try {
+                    const symbol = coin.symbol.toUpperCase() + 'USDT';
+                    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=15`);
+                    const data = await res.json();
+                    
+                    if (data && data.length >= 15 && !data.code) {
+                        const closes = data.map(d => parseFloat(d[4]));
+                        const rsi = calculateRSI(closes, 14);
+                        if (rsi != null) {
+                            rsiResults[coin.id] = rsi;
+                        }
+                    }
+                } catch(e) {}
             });
             await Promise.all(promises);
             
             const done = Math.min(i + batchSize, filtered.length);
-            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال بررسی RSI (Binance + KuCoin + Bybit)...<br><small>${done} از ${filtered.length} ارز بررسی شد (${Object.keys(rsiResults).length} پیدا شد)</small></div>`;
+            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال محاسبه RSI از Binance...<br><small>${done} از ${filtered.length} ارز بررسی شد (${Object.keys(rsiResults).length} پیدا شد)</small></div>`;
         }
         
         rsiData = rsiResults;
@@ -590,7 +620,7 @@
             document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع (≥۶۵ یا ≤۳۵)`;
             renderCoins(alertCoins, container, false, true);
         } else {
-            container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۶۵ یا RSI ≤ ۳۵) نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`;
+            container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`;
             document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`;
         }
     }
