@@ -5,22 +5,41 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 TOKEN = os.getenv("BOT_TOKEN", "8631947965:AAGc9y7vcfeEtIsj4_yt7-2OpDq7a5NklHM")
 
+# لیست تبدیل نماد به اسم کامل
+SYMBOL_MAP = {
+    "btc": "bitcoin", "eth": "ethereum", "doge": "dogecoin",
+    "xrp": "ripple", "ada": "cardano", "sol": "solana",
+    "dot": "polkadot", "ltc": "litecoin", "shib": "shiba-inu",
+    "matic": "matic-network", "bnb": "binancecoin", "usdt": "tether",
+    "usdc": "usd-coin", "avax": "avalanche-2", "link": "chainlink",
+    "uni": "uniswap", "atom": "cosmos", "xlm": "stellar",
+    "etc": "ethereum-classic", "fil": "filecoin", "trx": "tron",
+    "near": "near", "apt": "aptos", "sui": "sui",
+    "op": "optimism", "arb": "arbitrum", "pepe": "pepe",
+    "floki": "floki", "bonk": "bonk", "wif": "dogwifcoin",
+}
+
+def resolve_coin(name):
+    name = name.lower().strip()
+    return SYMBOL_MAP.get(name, name)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🚀 به DigitalCity Market خوش آمدید!\n\n"
-        "📊 اسم ارز رو بفرستید تا قیمتش رو بدم\n"
-        "📊 چند ارز با کاما جدا کنید: btc,eth,doge\n"
-        "🏆 /top - ۱۰ ارز برتر\n"
-        "❓ /help - راهنما"
+        "✨ کافیه اسم یا نماد ارز رو بفرستی:\n"
+        "`bitcoin` یا `btc`\n\n"
+        "✨ چند ارز با کاما:\n"
+        "`btc, eth, doge, pepe`\n\n"
+        "🏆 /top - ۱۰ ارز برتر"
     )
 
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📚 راهنما:\n\n"
-        "✨ کافیه اسم ارز رو بفرستی:\n"
-        "`bitcoin` یا `btc`\n\n"
+        "✨ اسم یا نماد ارز:\n"
+        "`bitcoin` `btc` `eth` `doge` `pepe`\n\n"
         "✨ چند ارز با کاما:\n"
-        "`btc, eth, doge`\n\n"
+        "`btc, eth, doge, sol`\n\n"
         "✨ دستورات:\n"
         "/top - ۱۰ ارز برتر بازار"
     )
@@ -32,7 +51,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text.startswith('/'):
         return
     
-    coins_list = [c.strip().lower() for c in text.split(",")]
+    # تبدیل نمادها به اسم کامل
+    raw_coins = [c.strip() for c in text.split(",")]
+    coins_list = [resolve_coin(c) for c in raw_coins]
     
     try:
         async with httpx.AsyncClient() as client:
