@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigitalCity Market</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
+        
+        :root {
+            --bg: #0a0a0f;
+            --card: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.06);
+            --purple: #8b5cf6;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --red: #ef4444;
+            --gold: #f59e0b;
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --glass: rgba(139,92,246,0.08);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.04) 0%, transparent 70%);
+        }
+        
+        .particles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .particle {
+            position: absolute; border-radius: 50%;
+            animation: float 8s infinite ease-in-out; opacity: 0.3;
+        }
+        @keyframes float {
+            0%,100%{transform:translateY(0)translateX(0)scale(1)}
+            25%{transform:translateY(-40px)translateX(20px)scale(1.3)}
+            50%{transform:translateY(-80px)translateX(-10px)scale(0.8)}
+            75%{transform:translateY(-30px)translateX(-30px)scale(1.1)}
+        }
+        
+        .header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); padding: 10px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .header-logo { display: flex; align-items: center; gap: 8px; }
+        .header-logo img {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 2px solid var(--purple); box-shadow: 0 0 15px rgba(139,92,246,0.3);
+        }
+        .header-title {
+            font-size: 15px; font-weight: 900;
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .hamburger {
+            width: 34px; height: 34px; background: var(--card);
+            border: 1px solid var(--border); border-radius: 10px;
+            cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+        }
+        .hamburger span { display: block; width: 15px; height: 2px; background: var(--text); border-radius: 2px; }
+        
+        .side-menu {
+            position: fixed; top: 0; right: -320px; width: 280px; height: 100%;
+            background: rgba(15,15,25,0.98); backdrop-filter: blur(30px);
+            border-left: 1px solid var(--border); z-index: 200;
+            transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
+            padding: 24px 18px; display: flex; flex-direction: column;
+        }
+        .side-menu.active { right: 0; }
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 150;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+        
+        .menu-header { text-align: center; margin-bottom: 24px; }
+        .menu-header img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--purple); }
+        .menu-header h3 { margin-top: 8px; font-size: 16px; font-weight: 900; }
+        .menu-links { display: flex; flex-direction: column; gap: 6px; }
+        .menu-link {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: 12px;
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--text); text-decoration: none;
+            font-size: 13px; font-weight: 500;
+        }
+        .menu-link:active { background: var(--glass); border-color: var(--purple); }
+        .menu-footer { margin-top: auto; text-align: center; color: var(--text2); font-size: 10px; }
+        
+        .search-container {
+            position: sticky; top: 55px; z-index: 50;
+            padding: 10px 16px; background: rgba(10,10,15,0.85);
+            backdrop-filter: blur(10px);
+        }
+        .search-box {
+            width: 100%; padding: 12px 16px; border-radius: 14px;
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--text); font-family: 'Vazirmatn', sans-serif;
+            font-size: 14px; outline: none; transition: all 0.3s;
+        }
+        .search-box:focus { border-color: var(--purple); box-shadow: 0 0 15px rgba(139,92,246,0.1); }
+        .search-box::placeholder { color: var(--text2); }
+        
+        .tabs {
+            display: flex; gap: 6px; padding: 10px 16px;
+            position: sticky; top: 55px; z-index: 50;
+            background: rgba(10,10,15,0.85); backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+        }
+        .tab {
+            flex: 1; min-width: 60px; padding: 9px 7px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--card);
+            color: var(--text2); font-size: 11px; font-weight: 500;
+            cursor: pointer; text-align: center; font-family: 'Vazirmatn', sans-serif;
+            transition: all 0.3s; display: flex; align-items: center;
+            justify-content: center; gap: 4px; white-space: nowrap;
+        }
+        .tab.active { background: var(--glass); border-color: var(--purple); color: var(--purple); font-weight: 700; }
+        .tab svg { flex-shrink: 0; }
+        
+        .coin-list { padding: 20px 16px 80px; position: relative; z-index: 1; }
+        .coin-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 12px 14px; margin-bottom: 8px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+            backdrop-filter: blur(10px); transition: all 0.3s;
+            position: relative;
+        }
+        .coin-card:active { transform: scale(0.98); border-color: var(--purple); }
+        
+        .coin-rank {
+            width: 26px; height: 26px; border-radius: 7px;
+            background: var(--glass); display: flex; align-items: center;
+            justify-content: center; font-size: 11px; font-weight: 700;
+            color: var(--text2); flex-shrink: 0;
+        }
+        .coin-icon { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; }
+        .coin-info { flex: 1; min-width: 100px; }
+        .coin-name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .coin-symbol { font-size: 10px; color: var(--text2); }
+        .coin-price { text-align: left; flex-shrink: 0; min-width: 90px; }
+        .coin-price .price { font-weight: 900; font-size: 14px; }
+        .coin-price .change { font-size: 11px; font-weight: 500; }
+        .up { color: var(--green); }
+        .down { color: var(--red); }
+        
+        .coin-volume {
+            width: 100%; font-size: 10px; color: var(--text2);
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 4px; border-top: 1px solid var(--border);
+        }
+        
+        .star-btn {
+            flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px;
+            border: 1px solid var(--border); background: var(--card);
+            cursor: pointer; font-size: 13px; display: flex;
+            align-items: center; justify-content: center;
+            color: var(--text2); transition: all 0.3s; margin-right: auto;
+        }
+        .star-btn.starred { color: var(--gold); border-color: var(--gold); background: rgba(245,158,11,0.1); }
+        
+        .alert-section { padding: 16px; }
+        .alert-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 18px; }
+        .alert-card h3 { font-size: 15px; margin-bottom: 14px; font-weight: 700; }
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 11px; border-radius: 12px;
+            background: var(--bg); border: 1px solid var(--border);
+            color: var(--text); font-family: 'Vazirmatn', sans-serif;
+            font-size: 13px; outline: none;
+        }
+        .input-group input:focus, .input-group select:focus { border-color: var(--purple); }
+        .btn-primary {
+            width: 100%; padding: 13px; border-radius: 14px;
+            background: linear-gradient(135deg, var(--purple), var(--blue));
+            color: white; border: none; font-family: 'Vazirmatn', sans-serif;
+            font-size: 13px; font-weight: 700; cursor: pointer;
+        }
+        .alert-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 11px; background: var(--bg); border-radius: 12px;
+            margin-top: 8px; border: 1px solid var(--border);
+        }
+        .btn-delete {
+            background: rgba(239,68,68,0.1); color: var(--red);
+            border: 1px solid rgba(239,68,68,0.2); padding: 5px 10px;
+            border-radius: 8px; cursor: pointer; font-size: 11px;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        .results-count {
+            font-size: 11px; color: var(--text2); padding: 8px 16px;
+            position: sticky; top: 100px; z-index: 40;
+            background: rgba(10,10,15,0.7); backdrop-filter: blur(10px);
+        }
+        
+        .section-title {
+            font-size: 14px; font-weight: 700; margin: 20px 0 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        
+        .empty { text-align: center; padding: 40px; color: var(--text2); }
+        .loading { text-align: center; padding: 40px; }
+        .spinner {
+            width: 36px; height: 36px; border: 3px solid var(--border);
+            border-top-color: var(--purple); border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .hidden { display: none; }
+        
+        .empty-watchlist {
+            padding: 30px 16px; text-align: center; color: var(--text2); line-height: 2.2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="particles" id="particles"></div>
+    <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+    
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">
+            <img src="https://i.postimg.cc/f3npcsvF/logo.png" alt="DigitalCity">
+            <h3>DigitalCity Market</h3>
+        </div>
+        <div class="menu-links">
+            <a href="https://t.me/digitalcity2025" target="_blank" class="menu-link">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#0088cc"/>
+                    <path d="M5.431 11.873l8.208-3.168c.38-.161.704-.083.483.161l-1.664 1.5-1.177 1.812-.444 3.168c.083 0 .19-.083.273-.161l1.99-1.664 2.493 1.832c.46.253.79.122.904-.425l1.637-7.712c.168-.674-.26-.978-.722-.779L5.43 10.76c-.698.28-.693.668-.127.842l2.112.66 4.884-3.08c.23-.15.442-.07.268.088l-3.946 3.56-.17 2.58-.823-.28-.008-.02z" fill="white"/>
+                </svg>
+                <span>کانال تلگرام</span>
+            </a>
+            <a href="https://youtube.com/@digitalcity2024" target="_blank" class="menu-link">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" rx="6" fill="#FF0000"/>
+                    <path d="M19.615 8.184c-.21-.796-.829-1.423-1.615-1.635C16.577 6.167 12 6.167 12 6.167s-4.577 0-6 .382c-.786.212-1.405.84-1.615 1.635C4 9.547 4 12 4 12s0 2.453.385 3.816c.21.796.829 1.423 1.615 1.635 1.423.382 6 .382 6 .382s4.577 0 6-.382c.786-.212 1.405-.84 1.615-1.635C20 14.453 20 12 20 12s0-2.453-.385-3.816z" fill="white"/>
+                    <path d="M10.5 15.167l4-3.167-4-3.167v6.334z" fill="#FF0000"/>
+                </svg>
+                <span>کانال یوتیوب</span>
+            </a>
+            <a href="https://coinmarketcap.com/community/profile/a_abbasbeigi/" target="_blank" class="menu-link">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="12" fill="#3861FB"/>
+                    <path d="M6 8.5L12 3l6 5.5L12 14 6 8.5z" fill="white" opacity="0.7"/>
+                    <path d="M6 12l6 5.5 6-5.5" stroke="white" stroke-width="1.5" fill="none" opacity="0.9"/>
+                    <path d="M6 15.5l6 5.5 6-5.5" stroke="white" stroke-width="1.5" fill="none" opacity="0.5"/>
+                </svg>
+                <span>پروفایل CMC</span>
+            </a>
+        </div>
+        <div class="menu-footer">DigitalCity Market © 2026</div>
+    </div>
+
+    <div class="header">
+        <div class="header-logo">
+            <img src="https://i.postimg.cc/f3npcsvF/logo.png" alt="Logo">
+            <span class="header-title">DigitalCity Market</span>
+        </div>
+        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+    
+    <div class="search-container">
+        <input type="text" class="search-box" id="searchInput" placeholder="🔍 جستجوی ارز (نام یا نماد)..." oninput="filterCoins()">
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('market')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3v18h18V3H3zm14 14h-4v-4h4v4zm-6 0H7v-4h4v4zm-4-6h4V7h-4v4zm6 0h4V7h-4v4z"/></svg>
+            بازار
+        </button>
+        <button class="tab" onclick="switchTab('trends')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+            ترندها
+        </button>
+        <button class="tab" onclick="switchTab('watchlist')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            واچ‌لیست
+        </button>
+        <button class="tab" onclick="switchTab('alerts')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            هشدار
+        </button>
+    </div>
+    
+    <div class="results-count" id="resultsCount"></div>
+    
+    <div class="tab-content active" id="market-tab">
+        <div class="coin-list" id="marketList">
+            <div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="trends-tab">
+        <div class="coin-list" id="trendsList">
+            <div class="empty">در حال بارگذاری ترندها...</div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="watchlist-tab">
+        <div class="coin-list" id="watchlistList">
+            <div class="empty-watchlist">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="alerts-tab">
+        <div class="alert-section">
+            <div class="alert-card">
+                <h3>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple)" style="vertical-align:middle;margin-left:6px"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                    تنظیم هشدار قیمتی
+                </h3>
+                <div class="input-group"><label>شناسه ارز (مثال: bitcoin)</label><input type="text" id="alertCoin" placeholder="bitcoin"></div>
+                <div class="input-group"><label>قیمت هدف (دلار)</label><input type="number" id="alertPrice" placeholder="50000"></div>
+                <div class="input-group"><label>نوع هشدار</label><select id="alertType"><option value="above">📈 بالاتر از</option><option value="below">📉 پایین‌تر از</option></select></div>
+                <button class="btn-primary" onclick="addAlert()">💾 ذخیره هشدار</button>
+            </div>
+            <div id="alertList" style="margin-top:14px;"></div>
+        </div>
+    </div>
+
+<script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    
+    (function() {
+        const c = document.getElementById('particles');
+        const colors = ['#8b5cf6','#3b82f6','#f59e0b','#10b981'];
+        for(let i=0; i<15; i++) {
+            const p = document.createElement('div'); p.className = 'particle';
+            p.style.cssText = `width:${Math.random()*3+1}px;height:${Math.random()*3+1}px;background:${colors[Math.floor(Math.random()*colors.length)]};left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*8}s;animation-duration:${Math.random()*6+6}s;`;
+            c.appendChild(p);
+        }
+    })();
+    
+    function toggleMenu() {
+        document.getElementById('sideMenu').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+    function closeMenu() {
+        document.getElementById('sideMenu').classList.remove('active');
+        document.getElementById('overlay').classList.remove('active');
+    }
+    
+    let currentTab = 'market';
+    
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        event.target.closest('.tab').classList.add('active');
+        document.getElementById(tab + '-tab').classList.add('active');
+        const searchBar = document.querySelector('.search-container');
+        const resultsCount = document.getElementById('resultsCount');
+        if (tab === 'market' || tab === 'trends') { 
+            searchBar.classList.remove('hidden'); 
+            resultsCount.classList.remove('hidden'); 
+        } else { 
+            searchBar.classList.add('hidden'); 
+            resultsCount.classList.add('hidden'); 
+        }
+        if (tab === 'market') renderAllCoins();
+        if (tab === 'trends') loadTrendsTab();
+        if (tab === 'watchlist') loadWatchlist();
+        if (tab === 'alerts') loadAlerts();
+    }
+    
+    let allCoins = [];
+    let marketData = [];
+    
+    function formatVolume(vol) {
+        if (!vol) return 'N/A';
+        if (vol >= 1e9) return '$' + (vol/1e9).toFixed(1) + 'B';
+        if (vol >= 1e6) return '$' + (vol/1e6).toFixed(1) + 'M';
+        if (vol >= 1e3) return '$' + (vol/1e3).toFixed(1) + 'K';
+        return '$' + vol.toFixed(0);
+    }
+    
+    async function fetchAllCoins() {
+        const container = document.getElementById('marketList');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...<br><small>ممکن است ۱۰ ثانیه طول بکشد</small></div>';
+        
+        try {
+            const pages = [1,2,3,4];
+            const results = await Promise.all(pages.map(page =>
+                fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false&price_change_percentage=24h`)
+                    .then(r => r.json())
+            ));
+            
+            allCoins = results.flat();
+            marketData = allCoins;
+            localStorage.setItem('dc_market_cache', JSON.stringify({data: allCoins, time: Date.now()}));
+            renderAllCoins();
+        } catch(e) {
+            const cache = localStorage.getItem('dc_market_cache');
+            if (cache) {
+                const parsed = JSON.parse(cache);
+                allCoins = parsed.data;
+                marketData = allCoins;
+                renderAllCoins();
+                document.getElementById('resultsCount').innerHTML = `⚠️ داده‌های ذخیره‌شده - ${allCoins.length} ارز`;
+            } else {
+                container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>';
+            }
+        }
+    }
+    
+    function loadTrendsTab() {
+        const container = document.getElementById('trendsList');
+        
+        if (!marketData.length) {
+            container.innerHTML = '<div class="empty">⏳ ابتدا تب بازار را باز کنید</div>';
+            return;
+        }
+        
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال مرتب‌سازی ترندها...</div>';
+        
+        setTimeout(() => {
+            const sorted = [...marketData].filter(c => c.price_change_percentage_24h != null);
+            const gainers = sorted.sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0,10);
+            const losers = sorted.sort((a,b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0,10);
+            
+            let html = `
+                <div class="section-title" style="color:var(--green)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+                    ۱۰ ارز با بیشترین افزایش ۲۴ ساعته
+                </div>`;
+            
+            gainers.forEach(coin => { html += coinCardHTML(coin); });
+            
+            html += `
+                <div class="section-title" style="color:var(--red);margin-top:24px">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="transform:scaleY(-1)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+                    ۱۰ ارز با بیشترین کاهش ۲۴ ساعته
+                </div>`;
+            
+            losers.forEach(coin => { html += coinCardHTML(coin); });
+            
+            container.innerHTML = html;
+            document.getElementById('resultsCount').innerHTML = '🔥 ترندهای ۲۴ ساعته بازار';
+        }, 50);
+    }
+    
+    function coinCardHTML(coin) {
+        const change = coin.price_change_percentage_24h;
+        const isUp = change >= 0;
+        const inWatchlist = getWatchlist().some(w => w.id === coin.id);
+        return `
+        <div class="coin-card">
+            <div class="coin-rank">${coin.market_cap_rank || '-'}</div>
+            <img class="coin-icon" src="${coin.image}" alt="${coin.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%238b5cf6%22/><text x=%2216%22 y=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2212%22>${coin.symbol?.charAt(0)?.toUpperCase()||'?'}</text></svg>'">
+            <div class="coin-info">
+                <div class="coin-name">${coin.name}</div>
+                <div class="coin-symbol">${coin.symbol?.toUpperCase()}</div>
+            </div>
+            <div class="coin-price">
+                <div class="price">$${coin.current_price?.toLocaleString() || 'N/A'}</div>
+                <div class="change ${isUp?'up':'down'}">${isUp?'+':''}${change?.toFixed(2)}%</div>
+            </div>
+            <button class="star-btn ${inWatchlist?'starred':''}" onclick="toggleWatchlist('${coin.id}','${coin.name}','${coin.symbol?.toUpperCase()}','${coin.image}')">⭐</button>
+            <div class="coin-volume">
+                <span>📊 حجم ۲۴h: ${formatVolume(coin.total_volume)}</span>
+                <span>💰 مارکت کپ: ${formatVolume(coin.market_cap)}</span>
+            </div>
+        </div>`;
+    }
+    
+    function renderAllCoins() {
+        const container = document.getElementById('marketList');
+        const searchTerm = document.getElementById('searchInput')?.value || '';
+        filterAndRender(container, searchTerm);
+    }
+    
+    function filterCoins() {
+        const container = document.getElementById('marketList');
+        const searchTerm = document.getElementById('searchInput').value;
+        filterAndRender(container, searchTerm);
+    }
+    
+    function filterAndRender(container, searchTerm) {
+        let coins = marketData;
+        if (searchTerm.trim()) {
+            const term = searchTerm.trim().toLowerCase();
+            coins = marketData.filter(c => 
+                c.name.toLowerCase().includes(term) || 
+                c.symbol.toLowerCase().includes(term)
+            );
+        }
+        
+        document.getElementById('resultsCount').innerHTML = `نمایش ${coins.length} از ${marketData.length} ارز | حجم کل بازار: ${formatVolume(marketData.reduce((s,c) => s + (c.total_volume || 0), 0))}`;
+        renderCoins(coins, container, false);
+    }
+    
+    function renderCoins(coins, container, isWatchlist) {
+        if (!coins.length) { container.innerHTML = '<div class="empty">هیچ ارزی پیدا نشد</div>'; return; }
+        const watchlist = getWatchlist();
+        let html = '';
+        coins.forEach(coin => {
+            const change = coin.price_change_percentage_24h;
+            const isUp = change >= 0;
+            const inWatchlist = watchlist.some(w => w.id === coin.id);
+            html += `
+            <div class="coin-card">
+                <div class="coin-rank">${coin.market_cap_rank || '-'}</div>
+                <img class="coin-icon" src="${coin.image}" alt="${coin.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%238b5cf6%22/><text x=%2216%22 y=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2212%22>${coin.symbol?.charAt(0)?.toUpperCase()||'?'}</text></svg>'">
+                <div class="coin-info">
+                    <div class="coin-name">${coin.name}</div>
+                    <div class="coin-symbol">${coin.symbol?.toUpperCase()}</div>
+                </div>
+                <div class="coin-price">
+                    <div class="price">$${coin.current_price?.toLocaleString() || 'N/A'}</div>
+                    <div class="change ${isUp?'up':'down'}">${isUp?'+':''}${change?.toFixed(2)||'0.00'}%</div>
+                </div>
+                ${isWatchlist ? 
+                    `<button class="star-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeWatchlist('${coin.id}')">🗑️</button>` :
+                    `<button class="star-btn ${inWatchlist?'starred':''}" onclick="toggleWatchlist('${coin.id}','${coin.name}','${coin.symbol?.toUpperCase()}','${coin.image}')">⭐</button>`
+                }
+                <div class="coin-volume">
+                    <span>📊 حجم ۲۴h: ${formatVolume(coin.total_volume)}</span>
+                    <span>💰 مارکت کپ: ${formatVolume(coin.market_cap)}</span>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+    
+    function getWatchlist() { return JSON.parse(localStorage.getItem('dc_watchlist') || '[]'); }
+    function saveWatchlist(list) { localStorage.setItem('dc_watchlist', JSON.stringify(list)); }
+    
+    function toggleWatchlist(id, name, symbol, image) {
+        let list = getWatchlist();
+        const idx = list.findIndex(w => w.id === id);
+        if (idx > -1) { list.splice(idx, 1); } else { list.push({id, name, symbol, image}); }
+        saveWatchlist(list);
+        
+        if (currentTab === 'watchlist') loadWatchlist();
+        else if (currentTab === 'market') renderAllCoins();
+        else if (currentTab === 'trends') loadTrendsTab();
+    }
+    
+    function removeWatchlist(id) {
+        let list = getWatchlist();
+        list = list.filter(w => w.id !== id);
+        saveWatchlist(list);
+        loadWatchlist();
+        if (currentTab === 'market') renderAllCoins();
+        if (currentTab === 'trends') loadTrendsTab();
+    }
+    
+    function loadWatchlist() {
+        const container = document.getElementById('watchlistList');
+        const list = getWatchlist();
+        if (!list.length) { 
+            container.innerHTML = `
+            <div class="empty-watchlist">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small>
+            </div>`; 
+            return; 
+        }
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بارگذاری...</div>';
+        
+        const ids = list.map(w => w.id).join('%2C');
+        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`)
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.length) {
+                    renderCoins(data, container, true);
+                } else {
+                    const ids_set = new Set(list.map(w => w.id));
+                    const filtered = marketData.filter(c => ids_set.has(c.id));
+                    renderCoins(filtered.length ? filtered : [], container, true);
+                }
+            })
+            .catch(() => {
+                const ids_set = new Set(list.map(w => w.id));
+                const filtered = marketData.filter(c => ids_set.has(c.id));
+                renderCoins(filtered.length ? filtered : [], container, true);
+            });
+    }
+    
+    function getAlerts() { return JSON.parse(localStorage.getItem('dc_alerts') || '[]'); }
+    function saveAlerts(list) { localStorage.setItem('dc_alerts', JSON.stringify(list)); }
+    
+    function addAlert() {
+        const coin = document.getElementById('alertCoin').value.trim();
+        const price = parseFloat(document.getElementById('alertPrice').value);
+        const type = document.getElementById('alertType').value;
+        if (!coin || !price) return alert('لطفاً همه فیلدها را پر کن');
+        const list = getAlerts();
+        list.push({id: Date.now().toString(), coin, price, type, active: true, date: new Date().toLocaleDateString('fa-IR')});
+        saveAlerts(list);
+        document.getElementById('alertCoin').value = '';
+        document.getElementById('alertPrice').value = '';
+        loadAlerts();
+    }
+    
+    function deleteAlert(id) {
+        let list = getAlerts();
+        list = list.filter(a => a.id !== id);
+        saveAlerts(list);
+        loadAlerts();
+    }
+    
+    function loadAlerts() {
+        const container = document.getElementById('alertList');
+        const list = getAlerts();
+        if (!list.length) { container.innerHTML = '<div class="empty">🔕 هیچ هشدار فعالی نداری</div>'; return; }
+        let html = '';
+        list.forEach(a => {
+            html += `
+            <div class="alert-item">
+                <div><strong>${a.coin}</strong><br><small>${a.type==='above'?'📈 بالاتر':'📉 پایین‌تر'} از $${a.price?.toLocaleString()}</small><br><small style="color:var(--text2)">${a.date}</small></div>
+                <button class="btn-delete" onclick="deleteAlert('${a.id}')">حذف</button>
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+    
+    fetchAllCoins();
+    loadAlerts();
+</script>
+</body>
+</html>
