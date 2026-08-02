@@ -539,7 +539,7 @@
     
     async function loadRSITab() {
         const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر (تایم ۴ ساعته)...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر (تایم ۴ ساعته)...<br><small>ممکن است ۴۵ ثانیه طول بکشد</small></div>';
         document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
         
         if (!marketData.length) {
@@ -551,29 +551,36 @@
         const filtered = marketData.filter(c => !stablecoins.includes(c.id)).slice(0, 300);
         
         const rsiResults = {};
+        const exchanges = ['binance', 'kucoin', 'bybit'];
         
         const batchSize = 5;
         for (let i = 0; i < filtered.length; i += batchSize) {
             const batch = filtered.slice(i, i + batchSize);
-            const promises = batch.map(coin =>
-                fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=binance&symbol=${coin.symbol.toUpperCase()}/USDT&interval=4h&backtrack=1`)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data && data.value != null) {
-                            rsiResults[coin.id] = data.value;
-                        }
-                    })
-                    .catch(() => {})
-            );
+            const promises = batch.map(coin => {
+                const tryExchange = (index) => {
+                    if (index >= exchanges.length) return Promise.resolve(null);
+                    const exchange = exchanges[index];
+                    return fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=${exchange}&symbol=${coin.symbol.toUpperCase()}/USDT&interval=4h&backtrack=1`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.value != null) {
+                                rsiResults[coin.id] = data.value;
+                                return data.value;
+                            }
+                            return tryExchange(index + 1);
+                        })
+                        .catch(() => tryExchange(index + 1));
+                };
+                return tryExchange(0);
+            });
             await Promise.all(promises);
             
             const done = Math.min(i + batchSize, filtered.length);
-            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال بررسی RSI...<br><small>${done} از ${filtered.length} ارز بررسی شد</small></div>`;
+            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال بررسی RSI (Binance + KuCoin + Bybit)...<br><small>${done} از ${filtered.length} ارز بررسی شد (${Object.keys(rsiResults).length} پیدا شد)</small></div>`;
         }
         
         rsiData = rsiResults;
         
-        // فقط ارزهای RSI ≥ 65 یا RSI ≤ 35
         const alertCoins = filtered.filter(c => {
             const rsi = rsiResults[c.id];
             return rsi != null && (rsi >= 65 || rsi <= 35);
@@ -583,7 +590,7 @@
             document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع (≥۶۵ یا ≤۳۵)`;
             renderCoins(alertCoins, container, false, true);
         } else {
-            container.innerHTML = '<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۶۵ یا RSI ≤ ۳۵) در تایم ۴ ساعته نیست</div>';
+            container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۶۵ یا RSI ≤ ۳۵) نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`;
             document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`;
         }
     }
