@@ -157,7 +157,6 @@
         }
         .rsi-overbought { background: rgba(239,68,68,0.15); color: var(--red); }
         .rsi-oversold { background: rgba(16,185,129,0.15); color: var(--green); }
-        .rsi-neutral { background: rgba(148,163,184,0.1); color: var(--text2); }
         
         .star-btn {
             flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px;
@@ -315,7 +314,7 @@
     
     <div class="tab-content" id="rsi-tab">
         <div class="coin-list" id="rsiList">
-            <div class="empty">در حال محاسبه RSI...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>
+            <div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div>
         </div>
     </div>
     
@@ -453,10 +452,9 @@
     
     function getRSIBadge(rsi) {
         if (rsi == null) return '';
-        let cls = 'rsi-neutral';
-        if (rsi >= 70) cls = 'rsi-overbought';
-        else if (rsi <= 30) cls = 'rsi-oversold';
-        return `<span class="rsi-badge ${cls}">RSI ${rsi.toFixed(0)}</span>`;
+        if (rsi >= 70) return `<span class="rsi-badge rsi-overbought">RSI ${rsi.toFixed(0)}</span>`;
+        if (rsi <= 30) return `<span class="rsi-badge rsi-oversold">RSI ${rsi.toFixed(0)}</span>`;
+        return '';
     }
     
     function coinHTML(coin, change, isUp, inWatchlist, isWatchlist = false, rsi = null) {
@@ -541,7 +539,7 @@
     
     async function loadRSITab() {
         const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال محاسبه RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر (تایم ۴ ساعته)...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
         document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
         
         if (!marketData.length) {
@@ -558,7 +556,7 @@
         for (let i = 0; i < filtered.length; i += batchSize) {
             const batch = filtered.slice(i, i + batchSize);
             const promises = batch.map(coin =>
-                fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=binance&symbol=${coin.symbol.toUpperCase()}/USDT&interval=1h&backtrack=1`)
+                fetch(`https://api.taapi.io/rsi?secret=${TAAPI_KEY}&exchange=binance&symbol=${coin.symbol.toUpperCase()}/USDT&interval=4h&backtrack=1`)
                     .then(r => r.json())
                     .then(data => {
                         if (data && data.value != null) {
@@ -570,23 +568,23 @@
             await Promise.all(promises);
             
             const done = Math.min(i + batchSize, filtered.length);
-            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال محاسبه RSI...<br><small>${done} از ${filtered.length} ارز بررسی شد</small></div>`;
+            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال بررسی RSI...<br><small>${done} از ${filtered.length} ارز بررسی شد</small></div>`;
         }
         
         rsiData = rsiResults;
         
         // فقط ارزهای RSI ≥ 70 یا RSI ≤ 30
         const alertCoins = filtered.filter(c => {
-            const rsi = rsiResults[c.id] || 0;
-            return rsi >= 70 || rsi <= 30;
+            const rsi = rsiResults[c.id];
+            return rsi != null && (rsi >= 70 || rsi <= 30);
         }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
         
         if (alertCoins.length > 0) {
-            document.getElementById('resultsCount').innerHTML = `📊 RSI - ${alertCoins.length} ارز در محدوده اشباع`;
+            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع (≥۷۰ یا ≤۳۰)`;
             renderCoins(alertCoins, container, false, true);
         } else {
-            container.innerHTML = '<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۷۰ یا RSI ≤ ۳۰) نیست</div>';
-            document.getElementById('resultsCount').innerHTML = `📊 RSI - ${Object.keys(rsiResults).length} ارز بررسی شد`;
+            container.innerHTML = '<div class="empty">✅ هیچ ارزی در محدوده اشباع (RSI ≥ ۷۰ یا RSI ≤ ۳۰) در تایم ۴ ساعته نیست</div>';
+            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`;
         }
     }
     
