@@ -327,6 +327,8 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
     
+    const API_URL = 'https://digitalcity-market.onrender.com/api';
+    
     function toggleMenu() {
         document.getElementById('sideMenu').classList.toggle('active');
         document.getElementById('overlay').classList.toggle('active');
@@ -498,14 +500,31 @@
         }, 50);
     }
     
-    function getWatchlist() { return JSON.parse(localStorage.getItem('dc_watchlist') || '[]'); }
-    function saveWatchlist(list) { localStorage.setItem('dc_watchlist', JSON.stringify(list)); }
+    function getWatchlist() {
+        return JSON.parse(localStorage.getItem('dc_watchlist') || '[]');
+    }
+    function saveWatchlist(list) {
+        localStorage.setItem('dc_watchlist', JSON.stringify(list));
+    }
     
     function toggleWatchlist(id, name, symbol, image) {
         let list = getWatchlist();
         const idx = list.findIndex(w => w.id === id);
         if (idx > -1) { list.splice(idx, 1); } else { list.push({id, name, symbol, image}); }
         saveWatchlist(list);
+        
+        // ارسال به سرور
+        const userId = tg?.initDataUnsafe?.user?.id || 'demo';
+        if (idx > -1) {
+            fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' });
+        } else {
+            fetch(`${API_URL}/watchlist/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({id, name, symbol, image})
+            });
+        }
+        
         if (currentTab === 'watchlist') loadWatchlist();
         else if (currentTab === 'market') filterCoins();
         else if (currentTab === 'trends') loadTrendsTab();
@@ -515,6 +534,10 @@
         let list = getWatchlist();
         list = list.filter(w => w.id !== id);
         saveWatchlist(list);
+        
+        const userId = tg?.initDataUnsafe?.user?.id || 'demo';
+        fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' });
+        
         loadWatchlist();
         if (currentTab === 'market') filterCoins();
         if (currentTab === 'trends') loadTrendsTab();
@@ -555,12 +578,27 @@
         const price = parseFloat(document.getElementById('alertPrice').value);
         const type = document.getElementById('alertType').value;
         if (!coin || !price) return alert('لطفاً همه فیلدها را پر کن');
-        const list = getAlerts();
-        list.push({id: Date.now().toString(), coin, price, type, active: true, date: new Date().toLocaleDateString('fa-IR')});
-        saveAlerts(list);
-        document.getElementById('alertCoin').value = '';
-        document.getElementById('alertPrice').value = '';
-        loadAlerts();
+        
+        const userId = tg?.initDataUnsafe?.user?.id || 'demo';
+        const alertData = {
+            coin_id: coin,
+            coin_name: coin,
+            target_price: price,
+            type: type
+        };
+        
+        fetch(`${API_URL}/alerts/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(alertData)
+        }).then(() => {
+            const list = getAlerts();
+            list.push({id: Date.now().toString(), coin, price, type, active: true, date: new Date().toLocaleDateString('fa-IR')});
+            saveAlerts(list);
+            document.getElementById('alertCoin').value = '';
+            document.getElementById('alertPrice').value = '';
+            loadAlerts();
+        });
     }
     
     function deleteAlert(id) {
