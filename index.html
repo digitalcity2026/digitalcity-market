@@ -139,7 +139,7 @@
         .coin-info { flex: 1; min-width: 100px; }
         .coin-name { font-weight: 700; font-size: 13px; }
         .coin-symbol { font-size: 10px; color: var(--text2); }
-        .coin-price { text-align: left; flex-shrink: 0; min-width: 90px; }
+        .coin-price { text-align: left; flex-shrink: 0; min-width: 100px; }
         .coin-price .price { font-weight: 900; font-size: 14px; }
         .coin-price .change { font-size: 11px; font-weight: 500; }
         .up { color: var(--green); }
@@ -362,12 +362,24 @@
     
     let marketData = [];
     
+    function formatPrice(price) {
+        if (price == null) return 'N/A';
+        if (price >= 1) return '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if (price >= 0.01) return '$' + price.toFixed(4);
+        if (price >= 0.0001) return '$' + price.toFixed(6);
+        if (price >= 0.000001) return '$' + price.toFixed(8);
+        return '$' + price.toExponential(4);
+    }
+    
     function formatVolume(vol) {
         if (!vol) return 'N/A';
         if (vol >= 1e9) return '$' + (vol/1e9).toFixed(1) + 'B';
         if (vol >= 1e6) return '$' + (vol/1e6).toFixed(1) + 'M';
         if (vol >= 1e3) return '$' + (vol/1e3).toFixed(1) + 'K';
-        return '$' + vol.toFixed(0);
+        if (vol >= 1) return '$' + vol.toFixed(0);
+        if (vol >= 0.01) return '$' + vol.toFixed(4);
+        if (vol >= 0.0001) return '$' + vol.toFixed(6);
+        return '$' + vol.toFixed(8);
     }
     
     async function fetchPage() {
@@ -433,7 +445,7 @@
                 <div class="coin-symbol">${coin.symbol?.toUpperCase()}</div>
             </div>
             <div class="coin-price">
-                <div class="price">$${coin.current_price?.toLocaleString() || 'N/A'}</div>
+                <div class="price">${formatPrice(coin.current_price)}</div>
                 <div class="change ${isUp?'up':'down'}">${isUp?'+':''}${change?.toFixed(2)||'0.00'}%</div>
             </div>
             ${isWatchlist ? 
