@@ -408,7 +408,7 @@
                 appendCoins(data, container);
             }
             
-            document.getElementById('resultsCount').innerHTML = `📊 نمایش ${marketData.length} ارز (برای بیشتر، بارگذاری بیشتر بزنید)`;
+            document.getElementById('resultsCount').innerHTML = `📊 نمایش ${marketData.length} ارز`;
             
             if (!allLoaded) {
                 const loadMoreDiv = document.createElement('div');
@@ -481,23 +481,32 @@
             return;
         }
         
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال جستجو در کل بازار...</div>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال جستجو...</div>';
         document.getElementById('resultsCount').innerHTML = '🔍 در حال جستجو...';
         
         searchTimeout = setTimeout(async () => {
             try {
-                const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(term)}`);
-                const coins = await res.json();
+                const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(term)}`);
+                const data = await res.json();
                 
-                if (coins && coins.length > 0) {
-                    document.getElementById('resultsCount').innerHTML = `🔍 ${coins.length} ارز پیدا شد`;
-                    renderCoins(coins, container, false);
+                if (data.coins && data.coins.length > 0) {
+                    const ids = data.coins.slice(0, 50).map(c => c.id).join(',');
+                    const marketRes = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`);
+                    const coins = await marketRes.json();
+                    
+                    if (coins && coins.length > 0) {
+                        document.getElementById('resultsCount').innerHTML = `🔍 ${data.coins.length} ارز پیدا شد (نمایش ${coins.length} مورد)`;
+                        renderCoins(coins, container, false);
+                    } else {
+                        container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
+                        document.getElementById('resultsCount').innerHTML = '';
+                    }
                 } else {
                     container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
                     document.getElementById('resultsCount').innerHTML = '';
                 }
             } catch(e) {
-                container.innerHTML = '<div class="empty">⚠️ خطا در جستجو. لطفاً دوباره تلاش کنید.</div>';
+                container.innerHTML = '<div class="empty">⚠️ خطا در جستجو. دوباره تلاش کنید.</div>';
             }
         }, 500);
     }
