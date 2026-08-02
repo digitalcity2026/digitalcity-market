@@ -1,15 +1,15 @@
 import os
 import httpx
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 TOKEN = os.getenv("BOT_TOKEN", "8631947965:AAGc9y7vcfeEtIsj4_yt7-2OpDq7a5NklHM")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🚀 به DigitalCity Market خوش آمدید!\n\n"
-        "📊 /price btc - قیمت یک ارز\n"
-        "📊 /price btc,eth - چند ارز با هم\n"
+        "📊 اسم ارز رو بفرستید تا قیمتش رو بدم\n"
+        "📊 چند ارز با کاما جدا کنید: btc,eth,doge\n"
         "🏆 /top - ۱۰ ارز برتر\n"
         "❓ /help - راهنما"
     )
@@ -17,18 +17,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📚 راهنما:\n\n"
-        "/price bitcoin - قیمت بیت‌کوین\n"
-        "/price btc,eth,doge - چند ارز\n"
+        "✨ کافیه اسم ارز رو بفرستی:\n"
+        "`bitcoin` یا `btc`\n\n"
+        "✨ چند ارز با کاما:\n"
+        "`btc, eth, doge`\n\n"
+        "✨ دستورات:\n"
         "/top - ۱۰ ارز برتر بازار"
     )
 
-async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("❌ لطفاً اسم ارز رو بنویس. مثال: /price bitcoin")
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip()
+    
+    # چک کن متن شبیه دستور نباشه
+    if text.startswith('/'):
         return
     
-    coins_input = " ".join(context.args)
-    coins_list = [c.strip().lower() for c in coins_input.split(",")]
+    coins_list = [c.strip().lower() for c in text.split(",")]
     
     try:
         async with httpx.AsyncClient() as client:
@@ -67,7 +71,7 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"🏆 رتبه: #{coin.get('market_cap_rank', 'N/A')}"
                 )
     except Exception as e:
-        await update.message.reply_text("⚠️ خطا در دریافت قیمت. لطفاً دوباره تلاش کنید.")
+        pass
 
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -105,9 +109,9 @@ def main():
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_cmd))
-    app.add_handler(CommandHandler("price", price))
     app.add_handler(CommandHandler("top", top))
-    print("✅ ربات شروع به کار کرد...")
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    print("✅ ربات DigitalCity Market شروع به کار کرد...")
     app.run_polling()
 
 if __name__ == "__main__":
