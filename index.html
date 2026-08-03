@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DigitalCity Market</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
-        
         :root {
             --bg: #0a0a0f;
             --card: rgba(255,255,255,0.03);
@@ -64,8 +63,7 @@
             position: fixed; top: 0; right: -320px; width: 280px; height: 100%;
             background: rgba(15,15,25,0.98); backdrop-filter: blur(30px);
             border-left: 1px solid var(--border); z-index: 200;
-            transition: right 0.4s cubic-bezier(0.4,0,0.2,1);
-            padding: 24px 18px; display: flex; flex-direction: column;
+            transition: right 0.4s; padding: 24px 18px; display: flex; flex-direction: column;
         }
         .side-menu.active { right: 0; }
         .overlay {
@@ -98,7 +96,7 @@
             width: 100%; padding: 12px 16px; border-radius: 14px;
             background: var(--card); border: 1px solid var(--border);
             color: var(--text); font-family: 'Vazirmatn', sans-serif;
-            font-size: 14px; outline: none; transition: all 0.3s;
+            font-size: 14px; outline: none;
         }
         .search-box:focus { border-color: var(--purple); }
         .search-box::placeholder { color: var(--text2); }
@@ -167,9 +165,7 @@
         }
         .star-btn.starred { color: var(--gold); border-color: var(--gold); background: rgba(245,158,11,0.1); }
         
-        .load-more {
-            text-align: center; padding: 20px;
-        }
+        .load-more { text-align: center; padding: 20px; }
         .load-more button {
             padding: 12px 30px; border-radius: 14px;
             background: var(--glass); border: 1px solid var(--purple);
@@ -180,7 +176,7 @@
         .news-card {
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; padding: 14px; margin-bottom: 10px;
-            backdrop-filter: blur(10px); transition: all 0.3s;
+            backdrop-filter: blur(10px);
         }
         .news-card:active { border-color: var(--purple); }
         .news-title {
@@ -441,29 +437,11 @@
         return '';
     }
     
-    function coinHTML(coin, change, isUp, inWatchlist, isWatchlist = false, rsi = null) {
+    function coinHTML(coin, change, isUp, inWatchlist, isWatchlist, rsi) {
+        if (isWatchlist === undefined) isWatchlist = false;
+        if (rsi === undefined) rsi = null;
         const rsiBadge = getRSIBadge(rsi);
-        return `
-        <div class="coin-card">
-            <div class="coin-rank">${coin.market_cap_rank || '-'}</div>
-            <img class="coin-icon" src="${coin.image}" alt="${coin.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%238b5cf6%22/><text x=%2216%22 y=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2212%22>${coin.symbol?.charAt(0)?.toUpperCase()||'?'}</text></svg>'">
-            <div class="coin-info">
-                <div class="coin-name">${rsiBadge}${coin.name}</div>
-                <div class="coin-symbol">${coin.symbol?.toUpperCase()}</div>
-            </div>
-            <div class="coin-price">
-                <div class="price">${formatPrice(coin.current_price)}</div>
-                <div class="change ${isUp?'up':'down'}">${isUp?'+':''}${change?.toFixed(2)||'0.00'}%</div>
-            </div>
-            ${isWatchlist ? 
-                `<button class="star-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeWatchlist('${coin.id}')">🗑️</button>` :
-                `<button class="star-btn ${inWatchlist?'starred':''}" onclick="toggleWatchlist('${coin.id}','${coin.name}','${coin.symbol?.toUpperCase()}','${coin.image}')">⭐</button>`
-            }
-            <div class="coin-volume">
-                <span>📊 حجم: ${formatVolume(coin.total_volume)}</span>
-                <span>💰 مارکت کپ: ${formatVolume(coin.market_cap)}</span>
-            </div>
-        </div>`;
+        return `<div class="coin-card"><div class="coin-rank">${coin.market_cap_rank || '-'}</div><img class="coin-icon" src="${coin.image}" alt="${coin.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%238b5cf6%22/><text x=%2216%22 y=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2212%22>${coin.symbol?.charAt(0)?.toUpperCase()||'?'}</text></svg>'"><div class="coin-info"><div class="coin-name">${rsiBadge}${coin.name}</div><div class="coin-symbol">${coin.symbol?.toUpperCase()}</div></div><div class="coin-price"><div class="price">${formatPrice(coin.current_price)}</div><div class="change ${isUp?'up':'down'}">${isUp?'+':''}${change?.toFixed(2)||'0.00'}%</div></div>${isWatchlist ? `<button class="star-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeWatchlist('${coin.id}')">🗑️</button>` : `<button class="star-btn ${inWatchlist?'starred':''}" onclick="toggleWatchlist('${coin.id}','${coin.name}','${coin.symbol?.toUpperCase()}','${coin.image}')">⭐</button>`}<div class="coin-volume"><span>📊 حجم: ${formatVolume(coin.total_volume)}</span><span>💰 مارکت کپ: ${formatVolume(coin.market_cap)}</span></div></div>`;
     }
     
     function filterCoins() {
@@ -484,7 +462,9 @@
         }
     }
     
-    function renderCoins(coins, container, isWatchlist, withRSI = false) {
+    function renderCoins(coins, container, isWatchlist, withRSI) {
+        if (isWatchlist === undefined) isWatchlist = false;
+        if (withRSI === undefined) withRSI = false;
         if (!coins.length) { container.innerHTML = '<div class="empty">هیچ ارزی پیدا نشد</div>'; return; }
         const watchlist = getWatchlist();
         let html = '';
@@ -515,7 +495,8 @@
         }, 50);
     }
     
-    function calculateRSI(closes, period = 14) {
+    function calculateRSI(closes, period) {
+        if (period === undefined) period = 14;
         if (closes.length < period + 1) return null;
         let gains = 0, losses = 0;
         for (let i = 1; i <= period; i++) {
@@ -578,7 +559,7 @@
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت اخبار کریپتو...</div>';
         document.getElementById('resultsCount').innerHTML = '📰 در حال دریافت اخبار...';
         
-        const newsSources = [
+        const fallbackNews = [
             { title: "بیت‌کوین به بالاترین سطح هفتگی رسید", source: "CoinDesk", time: "۲ ساعت پیش", link: "https://www.coindesk.com" },
             { title: "اتریوم آپدیت جدید را منتشر کرد", source: "CoinTelegraph", time: "۴ ساعت پیش", link: "https://cointelegraph.com" },
             { title: "SEC پرونده جدیدی علیه صرافی‌ها باز کرد", source: "Reuters", time: "۶ ساعت پیش", link: "https://reuters.com" },
@@ -594,16 +575,13 @@
         try {
             const res = await fetch('https://api.coingecko.com/api/v3/status_updates?per_page=10&page=1');
             const data = await res.json();
-            
             let allNews = [];
-            
             if (data?.status_updates) {
                 data.status_updates.forEach(update => {
-                    const desc = update.description || '';
-                    const cleanDesc = desc.replace(/<[^>]*>/g, '').substring(0, 120);
-                    if (cleanDesc.length > 10) {
+                    const desc = (update.description || '').replace(/<[^>]*>/g, '').substring(0, 120);
+                    if (desc.length > 10) {
                         allNews.push({
-                            title: cleanDesc,
+                            title: desc,
                             source: update.project?.name || 'CoinGecko',
                             time: timeAgoText(new Date(update.updated_at * 1000)),
                             link: update.project?.links?.homepage?.[0] || 'https://coingecko.com'
@@ -611,45 +589,20 @@
                     }
                 });
             }
-            
-            if (allNews.length === 0) allNews = newsSources;
-            
-            let html = '';
-            let count = 0;
-            
+            if (allNews.length === 0) allNews = fallbackNews;
+            let html = '', count = 0;
             for (const news of allNews) {
                 if (count >= 12) break;
                 const titleFa = await translateToPersian(news.title);
-                html += `
-                <div class="news-card">
-                    <div class="news-title">
-                        <a href="${news.link}" target="_blank">${titleFa || news.title}</a>
-                    </div>
-                    <div class="news-meta">
-                        <span><span class="news-source">📰 ${news.source}</span></span>
-                        <span>${news.time}</span>
-                    </div>
-                    <div class="news-original">${news.title}</div>
-                </div>`;
+                html += `<div class="news-card"><div class="news-title"><a href="${news.link}" target="_blank">${titleFa || news.title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${news.source}</span></span><span>${news.time}</span></div><div class="news-original">${news.title}</div></div>`;
                 count++;
             }
-            
             container.innerHTML = html;
             document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر کریپتو`;
-            
         } catch(e) {
             let html = '';
-            for (const news of newsSources.slice(0, 10)) {
-                html += `
-                <div class="news-card">
-                    <div class="news-title">
-                        <a href="${news.link}" target="_blank">${news.title}</a>
-                    </div>
-                    <div class="news-meta">
-                        <span><span class="news-source">📰 ${news.source}</span></span>
-                        <span>${news.time}</span>
-                    </div>
-                </div>`;
+            for (const news of fallbackNews.slice(0, 10)) {
+                html += `<div class="news-card"><div class="news-title"><a href="${news.link}" target="_blank">${news.title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${news.source}</span></span><span>${news.time}</span></div></div>`;
             }
             container.innerHTML = html;
             document.getElementById('resultsCount').innerHTML = '📰 ۱۰ خبر مهم کریپتو';
@@ -675,12 +628,8 @@
         return Math.floor(diff / 86400) + ' روز پیش';
     }
     
-    function getWatchlist() {
-        return JSON.parse(localStorage.getItem('dc_watchlist') || '[]');
-    }
-    function saveWatchlist(list) {
-        localStorage.setItem('dc_watchlist', JSON.stringify(list));
-    }
+    function getWatchlist() { return JSON.parse(localStorage.getItem('dc_watchlist') || '[]'); }
+    function saveWatchlist(list) { localStorage.setItem('dc_watchlist', JSON.stringify(list)); }
     
     function toggleWatchlist(id, name, symbol, image) {
         let list = getWatchlist();
