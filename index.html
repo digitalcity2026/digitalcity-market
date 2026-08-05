@@ -546,30 +546,9 @@
         }, 50);
     }
     
-    function calculateRSI(closes, period) {
-        if (period === undefined) period = 14;
-        if (closes.length < period + 1) return null;
-        let gains = 0, losses = 0;
-        for (let i = 1; i <= period; i++) {
-            const diff = closes[i] - closes[i-1];
-            if (diff >= 0) gains += diff; else losses -= diff;
-        }
-        let avgGain = gains / period, avgLoss = losses / period;
-        if (avgLoss === 0) return 100;
-        let rs = avgGain / avgLoss, rsi = 100 - (100 / (1 + rs));
-        for (let i = period + 1; i < closes.length; i++) {
-            const diff = closes[i] - closes[i-1];
-            avgGain = (avgGain * (period - 1) + (diff >= 0 ? diff : 0)) / period;
-            avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period;
-            if (avgLoss === 0) return 100;
-            rsi = 100 - (100 / (1 + (avgGain / avgLoss)));
-        }
-        return rsi;
-    }
-    
     async function loadRSITab() {
         const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۳۰ ثانیه طول بکشد</small></div>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۴۵ ثانیه طول بکشد</small></div>';
         document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
         if (!marketData.length) { container.innerHTML = '<div class="empty">⏳ ابتدا تب بازار را باز کنید</div>'; return; }
         const stablecoins = ['tether', 'usd-coin', 'dai', 'binance-usd', 'true-usd', 'paxos-standard', 'usdd', 'frax'];
@@ -597,7 +576,7 @@
         rsiData = rsiResults;
         const alertCoins = filtered.filter(c => { const rsi = rsiResults[c.id]; return rsi != null && (rsi >= 65 || rsi <= 35); }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
         if (alertCoins.length > 0) {
-            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع (≥۶۵ یا ≤۳۵)`;
+            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع`;
             renderCoins(alertCoins, container, false, true);
         } else {
             container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`;
@@ -605,62 +584,60 @@
         }
     }
     
+    function calculateRSI(closes, period) {
+        if (period === undefined) period = 14;
+        if (closes.length < period + 1) return null;
+        let gains = 0, losses = 0;
+        for (let i = 1; i <= period; i++) {
+            const diff = closes[i] - closes[i-1];
+            if (diff >= 0) gains += diff; else losses -= diff;
+        }
+        let avgGain = gains / period, avgLoss = losses / period;
+        if (avgLoss === 0) return 100;
+        let rs = avgGain / avgLoss, rsi = 100 - (100 / (1 + rs));
+        for (let i = period + 1; i < closes.length; i++) {
+            const diff = closes[i] - closes[i-1];
+            avgGain = (avgGain * (period - 1) + (diff >= 0 ? diff : 0)) / period;
+            avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period;
+            if (avgLoss === 0) return 100;
+            rsi = 100 - (100 / (1 + (avgGain / avgLoss)));
+        }
+        return rsi;
+    }
+    
     async function loadNewsTab() {
         const container = document.getElementById('newsList');
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت اخبار کریپتو...</div>';
         document.getElementById('resultsCount').innerHTML = '📰 در حال دریافت اخبار...';
-        
         try {
-            const [cgRes, cpRes] = await Promise.allSettled([
-                fetch('https://api.coingecko.com/api/v3/status_updates?per_page=10&page=1').then(r => r.json()),
-                fetch('https://cryptopanic.com/api/v1/posts/?auth_token=01c1c1d6a5f2c0e0e6f8a5b3c7d9e1f2f3a4b5c6&filter=important&kind=news&limit=10').then(r => r.json())
-            ]);
-            
-            let allNews = [];
-            
-            if (cgRes.status === 'fulfilled' && cgRes.value?.status_updates) {
-                cgRes.value.status_updates.forEach(update => {
-                    const desc = (update.description || '').replace(/<[^>]*>/g, '').substring(0, 120);
-                    if (desc.length > 10) {
-                        allNews.push({title: desc, source: update.project?.name || 'CoinGecko', time: timeAgoText(new Date(update.updated_at * 1000)), link: update.project?.links?.homepage?.[0] || 'https://coingecko.com'});
-                    }
-                });
-            }
-            
-            if (cpRes.status === 'fulfilled' && cpRes.value?.results) {
-                cpRes.value.results.forEach(post => {
-                    allNews.push({title: post.title, source: post.source?.title || 'CryptoPanic', time: timeAgoText(new Date(post.published_at)), link: post.url});
-                });
-            }
-            
-            if (allNews.length === 0) {
-                const gnRes = await fetch('https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum&hl=en-US&gl=US&ceid=US:en&num=15');
-                const text = await gnRes.text();
-                const parser = new DOMParser();
-                const xml = parser.parseFromString(text, 'text/xml');
-                xml.querySelectorAll('item').forEach(item => {
+            const res = await fetch('https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum+OR+altcoin&hl=en-US&gl=US&ceid=US:en&num=20');
+            const text = await res.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, 'text/xml');
+            const items = xml.querySelectorAll('item');
+            if (items.length > 0) {
+                let allNews = [];
+                items.forEach(item => {
                     const title = item.querySelector('title')?.textContent || '';
-                    if (title) allNews.push({title: title.split(' - ')[0], source: item.querySelector('source')?.textContent || 'Google News', time: timeAgoText(new Date(item.querySelector('pubDate')?.textContent || Date.now())), link: item.querySelector('link')?.textContent || '#'});
+                    const link = item.querySelector('link')?.textContent || '#';
+                    const pubDate = item.querySelector('pubDate')?.textContent || '';
+                    const source = item.querySelector('source')?.textContent || 'Google News';
+                    if (title) allNews.push({title: title.split(' - ')[0], source: source, time: pubDate ? timeAgoText(new Date(pubDate)) : '', link: link});
                 });
-            }
-            
-            if (allNews.length > 0) {
-                localStorage.setItem('dc_news_cache', JSON.stringify({data: allNews, time: Date.now()}));
-                let html = '', count = 0;
-                for (const news of allNews) {
-                    if (count >= 15) break;
-                    const titleFa = await translateToPersian(news.title);
-                    html += `<div class="news-card"><div class="news-title"><a href="${news.link}" target="_blank">${titleFa || news.title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${news.source}</span></span><span>${news.time}</span></div><div class="news-original">${news.title}</div></div>`;
-                    count++;
-                }
-                container.innerHTML = html;
-                document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر کریپتو`;
-            } else {
-                showCachedNews(container);
-            }
-        } catch(e) {
-            showCachedNews(container);
-        }
+                if (allNews.length > 0) {
+                    localStorage.setItem('dc_news_cache', JSON.stringify({data: allNews, time: Date.now()}));
+                    let html = '', count = 0;
+                    for (const news of allNews) {
+                        if (count >= 15) break;
+                        const titleFa = await translateToPersian(news.title);
+                        html += `<div class="news-card"><div class="news-title"><a href="${news.link}" target="_blank">${titleFa || news.title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${news.source}</span></span><span>${news.time}</span></div><div class="news-original">${news.title}</div></div>`;
+                        count++;
+                    }
+                    container.innerHTML = html;
+                    document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر کریپتو`;
+                } else { showCachedNews(container); }
+            } else { showCachedNews(container); }
+        } catch(e) { showCachedNews(container); }
     }
     
     function showCachedNews(container) {
@@ -687,29 +664,23 @@
         const input = document.getElementById('aiInput');
         const question = input.value.trim();
         if (!question) return;
-        
         const answersDiv = document.getElementById('aiAnswers');
         answersDiv.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت پاسخ...</div>';
-        
         try {
             const res = await fetch(`${API_URL}/ask-ai`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
             });
-            
-            const data = await res.json();
-            const answer = data.answer || '⚠️ خطا در دریافت پاسخ';
-            
-            answersDiv.innerHTML = `
-                <div class="ai-card">
-                    <div class="ai-question">💬 ${question}</div>
-                    <div class="ai-answer">${answer}</div>
-                </div>
-                ${answersDiv.innerHTML}
-            `;
-            
-            input.value = '';
+            if (res.ok) {
+                const data = await res.json();
+                if (data.answer && !data.answer.startsWith('⚠️')) {
+                    answersDiv.innerHTML = `<div class="ai-card"><div class="ai-question">💬 ${question}</div><div class="ai-answer">${data.answer}</div></div>${answersDiv.innerHTML}`;
+                    input.value = '';
+                    return;
+                }
+            }
+            answersDiv.innerHTML = '<div class="empty">⚠️ خطا در دریافت پاسخ. لطفاً دوباره تلاش کنید.</div>';
         } catch(e) {
             answersDiv.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور</div>';
         }
