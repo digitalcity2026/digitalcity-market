@@ -493,10 +493,11 @@
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت اخبار کریپتو...</div>';
         document.getElementById('resultsCount').innerHTML = '📰 در حال دریافت اخبار...';
         try {
-            const res = await fetch('https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum+OR+altcoin&hl=en-US&gl=US&ceid=US:en&num=15');
-            const text = await res.text();
+            const res = await fetch(`${API_URL}/news`);
+            const data = await res.json();
+            if (!data.rss) { container.innerHTML = '<div class="empty">❌ خبری پیدا نشد</div>'; return; }
             const parser = new DOMParser();
-            const xml = parser.parseFromString(text, 'text/xml');
+            const xml = parser.parseFromString(data.rss, 'text/xml');
             const items = xml.querySelectorAll('item');
             if (items.length === 0) { container.innerHTML = '<div class="empty">❌ خبری پیدا نشد</div>'; return; }
             let html = '', count = 0;
@@ -522,7 +523,7 @@
         const answersDiv = document.getElementById('aiAnswers');
         answersDiv.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت پاسخ...</div>';
         try {
-            const res = await fetch('https://digitalcity-market.onrender.com/api/ask-ai', {
+            const res = await fetch(`${API_URL}/ask-ai`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
