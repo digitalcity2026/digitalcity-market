@@ -324,7 +324,7 @@
     <div class="tab-content" id="trends-tab"><div class="coin-list" id="trendsList"><div class="empty">در حال بارگذاری ترندها...</div></div></div>
     <div class="tab-content" id="rsi-tab"><div class="coin-list" id="rsiList"><div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div></div></div>
     <div class="tab-content" id="news-tab"><div class="coin-list" id="newsList"><div class="loading"><div class="spinner"></div>در حال دریافت اخبار...</div></div></div>
-    <div class="tab-content" id="ai-tab"><div class="coin-list" id="aiList"><div class="ai-card"><div class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>Gemini AI - دستیار هوشمند کریپتو</div><div class="ai-input-group"><input type="text" id="aiInput" placeholder="💬 سوال خود را بپرسید..."><button onclick="askAI()">📨 بپرس</button></div><div id="aiAnswers"></div></div></div></div>
+    <div class="tab-content" id="ai-tab"><div class="coin-list" id="aiList"><div class="ai-card"><div class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>AI - دستیار هوشمند کریپتو</div><div class="ai-input-group"><input type="text" id="aiInput" placeholder="💬 سوال خود را بپرسید..."><button onclick="askAI()">📨 بپرس</button></div><div id="aiAnswers"></div></div></div></div>
     <div class="tab-content" id="watchlist-tab"><div class="coin-list" id="watchlistList"><div class="empty-watchlist"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small></div></div></div>
 
 <script>
@@ -351,7 +351,7 @@
         if (tab === 'trends') loadTrendsTab();
         if (tab === 'rsi') loadRSITab();
         if (tab === 'news') loadNewsTab();
-        if (tab === 'ai') document.getElementById('resultsCount').innerHTML = '🤖 Gemini AI';
+        if (tab === 'ai') document.getElementById('resultsCount').innerHTML = '🤖 AI - سوال بپرسید';
         if (tab === 'watchlist') loadWatchlist();
     }
     
@@ -522,16 +522,22 @@
         if (!question) return;
         const answersDiv = document.getElementById('aiAnswers');
         answersDiv.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت پاسخ...</div>';
+        
         try {
             const res = await fetch(`${API_URL}/ask-ai`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
             });
+            
             const data = await res.json();
-            answersDiv.innerHTML = `<div class="ai-card"><div class="ai-question">💬 ${question}</div><div class="ai-answer">${data.answer || '⚠️ خطا در دریافت پاسخ'}</div></div>${answersDiv.innerHTML}`;
+            const answer = data?.answer || '⚠️ خطا در دریافت پاسخ';
+            
+            answersDiv.innerHTML = `<div class="ai-card"><div class="ai-question">💬 ${question}</div><div class="ai-answer">${answer}</div></div>${answersDiv.innerHTML}`;
             input.value = '';
-        } catch(e) { answersDiv.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور</div>'; }
+        } catch(e) {
+            answersDiv.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور</div>';
+        }
     }
     
     function timeAgoText(date) {
