@@ -23,14 +23,10 @@ async def get_prices():
             response = await client.get(
                 "https://api.coingecko.com/api/v3/coins/markets",
                 params={
-                    "vs_currency": "usd",
-                    "order": "market_cap_desc",
-                    "per_page": 50,
-                    "page": 1,
-                    "sparkline": "false",
+                    "vs_currency": "usd", "order": "market_cap_desc",
+                    "per_page": 50, "page": 1, "sparkline": "false",
                     "price_change_percentage": "24h"
-                },
-                timeout=10.0
+                }, timeout=10.0
             )
             return response.json()
     except:
@@ -48,9 +44,7 @@ async def ask_ai(request: dict):
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
-                json={
-                    "contents": [{"parts": [{"text": f"به فارسی و خلاصه پاسخ بده:\n\n{question}"}]}]
-                },
+                json={"contents": [{"parts": [{"text": f"به فارسی و خلاصه پاسخ بده:\n\n{question}"}]}]},
                 timeout=30.0
             )
             data = response.json()
@@ -58,3 +52,17 @@ async def ask_ai(request: dict):
             return {"answer": answer}
     except Exception as e:
         return {"answer": f"خطا: {str(e)}"}
+
+# ========== endpoint جدید برای اخبار ==========
+@app.get("/api/news")
+async def get_news():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum+OR+altcoin&hl=en-US&gl=US&ceid=US:en&num=15",
+                timeout=10.0
+            )
+            # برگردوندن raw XML - توی جاوااسکریپت parse می‌کنیم
+            return {"rss": response.text}
+    except:
+        return {"rss": ""}
