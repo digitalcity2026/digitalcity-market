@@ -35,7 +35,7 @@ async def get_prices():
 @app.post("/api/ask-ai")
 async def ask_ai(request: dict):
     try:
-        api_key = os.getenv("GEMINI_API_KEY", "")
+        api_key = os.getenv("OPENROUTER_API_KEY", "")
         if not api_key:
             return {"answer": "کلید API تنظیم نشده است"}
         
@@ -43,17 +43,26 @@ async def ask_ai(request: dict):
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
-                json={"contents": [{"parts": [{"text": f"به فارسی و خلاصه پاسخ بده:\n\n{question}"}]}]},
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "google/gemini-2.0-flash-001",
+                    "messages": [
+                        {"role": "system", "content": "تو یک تحلیلگر حرفه‌ای بازار ارزهای دیجیتال هستی. همیشه به فارسی و با توضیح کامل پاسخ بده."},
+                        {"role": "user", "content": question}
+                    ]
+                },
                 timeout=30.0
             )
             data = response.json()
-            answer = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "خطا")
+            answer = data.get("choices", [{}])[0].get("message", {}).get("content", "خطا در دریافت پاسخ")
             return {"answer": answer}
     except Exception as e:
         return {"answer": f"خطا: {str(e)}"}
 
-# ========== endpoint جدید برای اخبار ==========
 @app.get("/api/news")
 async def get_news():
     try:
@@ -62,7 +71,6 @@ async def get_news():
                 "https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum+OR+altcoin&hl=en-US&gl=US&ceid=US:en&num=15",
                 timeout=10.0
             )
-            # برگردوندن raw XML - توی جاوااسکریپت parse می‌کنیم
             return {"rss": response.text}
     except:
         return {"rss": ""}
