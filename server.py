@@ -129,6 +129,9 @@ async def get_alerts(user_id: str):
 async def ask_ai(request: dict):
     try:
         api_key = os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            return {"answer": "⚠️ کلید API تنظیم نشده است"}
+        
         question = request.get("question", "")
         
         async with httpx.AsyncClient() as client:
@@ -142,5 +145,5 @@ async def ask_ai(request: dict):
             data = response.json()
             answer = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "خطا در دریافت پاسخ")
             return {"answer": answer}
-    except:
-        return {"answer": "⚠️ خطا در ارتباط با هوش مصنوعی. لطفاً دوباره تلاش کنید."}
+    except Exception as e:
+        return {"answer": f"⚠️ خطا در ارتباط با هوش مصنوعی: {str(e)}"}
