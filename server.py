@@ -49,9 +49,9 @@ async def ask_ai(request: dict):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "google/gemini-2.0-flash-001",
+                    "model": "google/gemini-2.5-flash-lite-preview-06-2025",
                     "messages": [
-                        {"role": "system", "content": "تو یک تحلیلگر حرفه‌ای بازار ارزهای دیجیتال هستی. همیشه به فارسی و با توضیح کامل پاسخ بده."},
+                        {"role": "system", "content": "تو یک تحلیلگر بازار ارز دیجیتال هستی. همیشه فارسی و خلاصه جواب بده."},
                         {"role": "user", "content": question}
                     ]
                 },
