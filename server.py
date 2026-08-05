@@ -123,3 +123,24 @@ async def delete_alert(user_id: str, alert_id: str):
 async def get_alerts(user_id: str):
     data = load_data()
     return {"alerts": data["alerts"].get(user_id, [])}
+
+# ========== Gemini AI Endpoint ==========
+@app.post("/api/ask-ai")
+async def ask_ai(request: dict):
+    try:
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        question = request.get("question", "")
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
+                json={
+                    "contents": [{"parts": [{"text": f"تو یک تحلیلگر حرفه‌ای بازار ارزهای دیجیتال هستی. لطفاً به سوال زیر به فارسی و با توضیح کامل پاسخ بده:\n\n{question}"}]}]
+                },
+                timeout=30.0
+            )
+            data = response.json()
+            answer = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "خطا در دریافت پاسخ")
+            return {"answer": answer}
+    except:
+        return {"answer": "⚠️ خطا در ارتباط با هوش مصنوعی. لطفاً دوباره تلاش کنید."}
