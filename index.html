@@ -178,7 +178,6 @@
             border-radius: 16px; padding: 14px; margin-bottom: 10px;
             backdrop-filter: blur(10px);
         }
-        .news-card:active { border-color: var(--purple); }
         .news-title {
             font-weight: 700; font-size: 14px; margin-bottom: 8px;
             line-height: 1.5; color: var(--text);
@@ -192,10 +191,6 @@
             display: inline-block; padding: 2px 8px; border-radius: 8px;
             font-size: 9px; font-weight: 700; margin-right: 6px;
             background: var(--glass); color: var(--purple);
-        }
-        .news-original {
-            font-size: 10px; color: var(--text2); direction: ltr;
-            text-align: left; opacity: 0.7; margin-top: 4px;
         }
         
         .ai-card {
@@ -220,7 +215,6 @@
             color: var(--text); font-family: 'Vazirmatn', sans-serif;
             font-size: 13px; outline: none;
         }
-        .ai-input-group input:focus { border-color: var(--purple); }
         .ai-input-group button {
             padding: 12px 20px; border-radius: 14px;
             background: linear-gradient(135deg, var(--purple), var(--blue));
@@ -326,54 +320,12 @@
     
     <div class="results-count" id="resultsCount"></div>
     
-    <div class="tab-content active" id="market-tab">
-        <div class="coin-list" id="marketList">
-            <div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div>
-        </div>
-    </div>
-    
-    <div class="tab-content" id="trends-tab">
-        <div class="coin-list" id="trendsList">
-            <div class="empty">در حال بارگذاری ترندها...</div>
-        </div>
-    </div>
-    
-    <div class="tab-content" id="rsi-tab">
-        <div class="coin-list" id="rsiList">
-            <div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div>
-        </div>
-    </div>
-    
-    <div class="tab-content" id="news-tab">
-        <div class="coin-list" id="newsList">
-            <div class="loading"><div class="spinner"></div>در حال دریافت اخبار...</div>
-        </div>
-    </div>
-    
-    <div class="tab-content" id="ai-tab">
-        <div class="coin-list" id="aiList">
-            <div class="ai-card">
-                <div class="section-title">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                    Gemini AI - دستیار هوشمند کریپتو
-                </div>
-                <div class="ai-input-group">
-                    <input type="text" id="aiInput" placeholder="💬 سوال خود را بپرسید... (مثال: تحلیل بیت‌کوین)">
-                    <button onclick="askAI()">📨 بپرس</button>
-                </div>
-                <div id="aiAnswers"></div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="tab-content" id="watchlist-tab">
-        <div class="coin-list" id="watchlistList">
-            <div class="empty-watchlist">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                <br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small>
-            </div>
-        </div>
-    </div>
+    <div class="tab-content active" id="market-tab"><div class="coin-list" id="marketList"><div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div></div></div>
+    <div class="tab-content" id="trends-tab"><div class="coin-list" id="trendsList"><div class="empty">در حال بارگذاری ترندها...</div></div></div>
+    <div class="tab-content" id="rsi-tab"><div class="coin-list" id="rsiList"><div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div></div></div>
+    <div class="tab-content" id="news-tab"><div class="coin-list" id="newsList"><div class="loading"><div class="spinner"></div>در حال دریافت اخبار...</div></div></div>
+    <div class="tab-content" id="ai-tab"><div class="coin-list" id="aiList"><div class="ai-card"><div class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>Gemini AI - دستیار هوشمند کریپتو</div><div class="ai-input-group"><input type="text" id="aiInput" placeholder="💬 سوال خود را بپرسید..."><button onclick="askAI()">📨 بپرس</button></div><div id="aiAnswers"></div></div></div></div>
+    <div class="tab-content" id="watchlist-tab"><div class="coin-list" id="watchlistList"><div class="empty-watchlist"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small></div></div></div>
 
 <script>
     const tg = window.Telegram?.WebApp;
@@ -381,18 +333,10 @@
     
     const API_URL = 'https://digitalcity-market.onrender.com/api';
     
-    function toggleMenu() {
-        document.getElementById('sideMenu').classList.toggle('active');
-        document.getElementById('overlay').classList.toggle('active');
-    }
-    function closeMenu() {
-        document.getElementById('sideMenu').classList.remove('active');
-        document.getElementById('overlay').classList.remove('active');
-    }
+    function toggleMenu() { document.getElementById('sideMenu').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+    function closeMenu() { document.getElementById('sideMenu').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
     
-    let currentTab = 'market';
-    let marketData = [];
-    let rsiData = {};
+    let currentTab = 'market', marketData = [], rsiData = {};
     
     function switchTab(tab) {
         currentTab = tab;
@@ -400,25 +344,14 @@
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         event.target.closest('.tab').classList.add('active');
         document.getElementById(tab + '-tab').classList.add('active');
-        const searchBar = document.querySelector('.search-container');
-        const resultsCount = document.getElementById('resultsCount');
-        if (tab === 'market' || tab === 'trends' || tab === 'rsi') { 
-            searchBar.classList.remove('hidden'); resultsCount.classList.remove('hidden'); 
-        } else { 
-            searchBar.classList.add('hidden'); resultsCount.classList.add('hidden'); 
-        }
-        if (tab === 'market') { 
-            document.getElementById('searchInput').value = '';
-            if (marketData.length === 0) fetchAllCoins();
-            else {
-                renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false);
-                document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز لود شده`;
-            }
-        }
+        const searchBar = document.querySelector('.search-container'), resultsCount = document.getElementById('resultsCount');
+        if (tab === 'market' || tab === 'trends' || tab === 'rsi') { searchBar.classList.remove('hidden'); resultsCount.classList.remove('hidden'); }
+        else { searchBar.classList.add('hidden'); resultsCount.classList.add('hidden'); }
+        if (tab === 'market') { document.getElementById('searchInput').value = ''; if (marketData.length === 0) fetchAllCoins(); else { renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false); document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز لود شده`; } }
         if (tab === 'trends') loadTrendsTab();
         if (tab === 'rsi') loadRSITab();
         if (tab === 'news') loadNewsTab();
-        if (tab === 'ai') loadAITab();
+        if (tab === 'ai') document.getElementById('resultsCount').innerHTML = '🤖 Gemini AI';
         if (tab === 'watchlist') loadWatchlist();
     }
     
@@ -447,39 +380,20 @@
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...<br><small>ممکن است ۱۰ ثانیه طول بکشد</small></div>';
         try {
             const pages = [1,2,3,4];
-            const results = await Promise.all(pages.map(page =>
-                fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false&price_change_percentage=24h`)
-                    .then(r => r.json())
-            ));
+            const results = await Promise.all(pages.map(page => fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false&price_change_percentage=24h`).then(r => r.json())));
             marketData = results.flat();
             localStorage.setItem('dc_market_cache', JSON.stringify({data: marketData, time: Date.now()}));
             renderCoins(marketData.slice(0, 100), container, false);
             document.getElementById('resultsCount').innerHTML = `📊 ۱۰۰۰ ارز لود شد`;
-            if (marketData.length > 100) {
-                const loadMoreDiv = document.createElement('div');
-                loadMoreDiv.className = 'load-more'; loadMoreDiv.id = 'loadMoreBtn';
-                loadMoreDiv.innerHTML = '<button onclick="showAll()">📥 نمایش همه ۱۰۰۰ ارز</button>';
-                container.appendChild(loadMoreDiv);
-            }
+            if (marketData.length > 100) { const d = document.createElement('div'); d.className = 'load-more'; d.id = 'loadMoreBtn'; d.innerHTML = '<button onclick="showAll()">📥 نمایش همه ۱۰۰۰ ارز</button>'; container.appendChild(d); }
         } catch(e) {
             const cache = localStorage.getItem('dc_market_cache');
-            if (cache) {
-                const parsed = JSON.parse(cache);
-                marketData = parsed.data;
-                renderCoins(marketData.slice(0, 100), container, false);
-                document.getElementById('resultsCount').innerHTML = `⚠️ داده‌های ذخیره‌شده - ${marketData.length} ارز`;
-            } else {
-                container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>';
-            }
+            if (cache) { const p = JSON.parse(cache); marketData = p.data; renderCoins(marketData.slice(0, 100), container, false); document.getElementById('resultsCount').innerHTML = `⚠️ داده‌های ذخیره‌شده - ${marketData.length} ارز`; }
+            else container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>';
         }
     }
     
-    function showAll() {
-        const container = document.getElementById('marketList');
-        document.getElementById('loadMoreBtn')?.remove();
-        renderCoins(marketData, container, false);
-        document.getElementById('resultsCount').innerHTML = `📊 نمایش همه ${marketData.length} ارز`;
-    }
+    function showAll() { const c = document.getElementById('marketList'); document.getElementById('loadMoreBtn')?.remove(); renderCoins(marketData, c, false); document.getElementById('resultsCount').innerHTML = `📊 نمایش همه ${marketData.length} ارز`; }
     
     function getRSIBadge(rsi) {
         if (rsi == null) return '';
@@ -496,36 +410,19 @@
     }
     
     function filterCoins() {
-        const term = document.getElementById('searchInput').value.trim().toLowerCase();
-        const container = document.getElementById('marketList');
-        if (!term) { 
-            renderCoins(marketData.slice(0, 100), container, false); 
-            document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز`;
-            return; 
-        }
+        const term = document.getElementById('searchInput').value.trim().toLowerCase(), container = document.getElementById('marketList');
+        if (!term) { renderCoins(marketData.slice(0, 100), container, false); document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز`; return; }
         const filtered = marketData.filter(c => c.name.toLowerCase().includes(term) || c.symbol.toLowerCase().includes(term));
-        if (filtered.length > 0) {
-            document.getElementById('resultsCount').innerHTML = `🔍 ${filtered.length} ارز پیدا شد`;
-            renderCoins(filtered, container, false);
-        } else {
-            container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>';
-            document.getElementById('resultsCount').innerHTML = '';
-        }
+        if (filtered.length > 0) { document.getElementById('resultsCount').innerHTML = `🔍 ${filtered.length} ارز پیدا شد`; renderCoins(filtered, container, false); }
+        else { container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>'; document.getElementById('resultsCount').innerHTML = ''; }
     }
     
     function renderCoins(coins, container, isWatchlist, withRSI) {
         if (isWatchlist === undefined) isWatchlist = false;
         if (withRSI === undefined) withRSI = false;
         if (!coins.length) { container.innerHTML = '<div class="empty">هیچ ارزی پیدا نشد</div>'; return; }
-        const watchlist = getWatchlist();
-        let html = '';
-        coins.forEach(coin => {
-            const change = coin.price_change_percentage_24h;
-            const isUp = change >= 0;
-            const inWatchlist = watchlist.some(w => w.id === coin.id);
-            const rsi = withRSI ? (rsiData[coin.id] || null) : null;
-            html += coinHTML(coin, change, isUp, inWatchlist, isWatchlist, rsi);
-        });
+        const watchlist = getWatchlist(); let html = '';
+        coins.forEach(coin => { const change = coin.price_change_percentage_24h, isUp = change >= 0, inWatchlist = watchlist.some(w => w.id === coin.id), rsi = withRSI ? (rsiData[coin.id] || null) : null; html += coinHTML(coin, change, isUp, inWatchlist, isWatchlist, rsi); });
         container.innerHTML = html;
     }
     
@@ -541,57 +438,15 @@
             gainers.forEach(c => { const ch = c.price_change_percentage_24h; html += coinHTML(c, ch, ch>=0, getWatchlist().some(w=>w.id===c.id)); });
             html += '<div class="section-title" style="color:var(--red);margin-top:24px"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="transform:scaleY(-1)"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>۱۰ ارز با بیشترین کاهش</div>';
             losers.forEach(c => { const ch = c.price_change_percentage_24h; html += coinHTML(c, ch, ch>=0, getWatchlist().some(w=>w.id===c.id)); });
-            container.innerHTML = html;
-            document.getElementById('resultsCount').innerHTML = '🔥 ترندهای ۲۴ ساعته';
+            container.innerHTML = html; document.getElementById('resultsCount').innerHTML = '🔥 ترندهای ۲۴ ساعته';
         }, 50);
-    }
-    
-    async function loadRSITab() {
-        const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۴۵ ثانیه طول بکشد</small></div>';
-        document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
-        if (!marketData.length) { container.innerHTML = '<div class="empty">⏳ ابتدا تب بازار را باز کنید</div>'; return; }
-        const stablecoins = ['tether', 'usd-coin', 'dai', 'binance-usd', 'true-usd', 'paxos-standard', 'usdd', 'frax'];
-        const filtered = marketData.filter(c => !stablecoins.includes(c.id)).slice(0, 300);
-        const rsiResults = {};
-        const batchSize = 5;
-        for (let i = 0; i < filtered.length; i += batchSize) {
-            const batch = filtered.slice(i, i + batchSize);
-            const promises = batch.map(async (coin) => {
-                try {
-                    const symbol = coin.symbol.toUpperCase() + 'USDT';
-                    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=15`);
-                    const data = await res.json();
-                    if (data && data.length >= 15 && !data.code) {
-                        const closes = data.map(d => parseFloat(d[4]));
-                        const rsi = calculateRSI(closes, 14);
-                        if (rsi != null) rsiResults[coin.id] = rsi;
-                    }
-                } catch(e) {}
-            });
-            await Promise.all(promises);
-            const done = Math.min(i + batchSize, filtered.length);
-            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال محاسبه RSI از Binance...<br><small>${done} از ${filtered.length} ارز بررسی شد (${Object.keys(rsiResults).length} پیدا شد)</small></div>`;
-        }
-        rsiData = rsiResults;
-        const alertCoins = filtered.filter(c => { const rsi = rsiResults[c.id]; return rsi != null && (rsi >= 65 || rsi <= 35); }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
-        if (alertCoins.length > 0) {
-            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع`;
-            renderCoins(alertCoins, container, false, true);
-        } else {
-            container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`;
-            document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`;
-        }
     }
     
     function calculateRSI(closes, period) {
         if (period === undefined) period = 14;
         if (closes.length < period + 1) return null;
         let gains = 0, losses = 0;
-        for (let i = 1; i <= period; i++) {
-            const diff = closes[i] - closes[i-1];
-            if (diff >= 0) gains += diff; else losses -= diff;
-        }
+        for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i-1]; if (diff >= 0) gains += diff; else losses -= diff; }
         let avgGain = gains / period, avgLoss = losses / period;
         if (avgLoss === 0) return 100;
         let rs = avgGain / avgLoss, rsi = 100 - (100 / (1 + rs));
@@ -605,100 +460,81 @@
         return rsi;
     }
     
+    async function loadRSITab() {
+        const container = document.getElementById('rsiList');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۴۵ ثانیه طول بکشد</small></div>';
+        document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
+        if (!marketData.length) { container.innerHTML = '<div class="empty">⏳ ابتدا تب بازار را باز کنید</div>'; return; }
+        const stablecoins = ['tether', 'usd-coin', 'dai', 'binance-usd', 'true-usd', 'paxos-standard', 'usdd', 'frax'];
+        const filtered = marketData.filter(c => !stablecoins.includes(c.id)).slice(0, 300);
+        const rsiResults = {}, batchSize = 5;
+        for (let i = 0; i < filtered.length; i += batchSize) {
+            const batch = filtered.slice(i, i + batchSize);
+            const promises = batch.map(async (coin) => {
+                try {
+                    const symbol = coin.symbol.toUpperCase() + 'USDT';
+                    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=15`);
+                    const data = await res.json();
+                    if (data && data.length >= 15 && !data.code) { const closes = data.map(d => parseFloat(d[4])); const rsi = calculateRSI(closes, 14); if (rsi != null) rsiResults[coin.id] = rsi; }
+                } catch(e) {}
+            });
+            await Promise.all(promises);
+            const done = Math.min(i + batchSize, filtered.length);
+            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال محاسبه RSI از Binance...<br><small>${done} از ${filtered.length} ارز بررسی شد (${Object.keys(rsiResults).length} پیدا شد)</small></div>`;
+        }
+        rsiData = rsiResults;
+        const alertCoins = filtered.filter(c => { const rsi = rsiResults[c.id]; return rsi != null && (rsi >= 65 || rsi <= 35); }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
+        if (alertCoins.length > 0) { document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع`; renderCoins(alertCoins, container, false, true); }
+        else { container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`; document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`; }
+    }
+    
     async function loadNewsTab() {
         const container = document.getElementById('newsList');
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت اخبار کریپتو...</div>';
         document.getElementById('resultsCount').innerHTML = '📰 در حال دریافت اخبار...';
         try {
-            const res = await fetch('https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum+OR+altcoin&hl=en-US&gl=US&ceid=US:en&num=20');
+            const res = await fetch('https://news.google.com/rss/search?q=cryptocurrency+bitcoin+OR+ethereum+OR+altcoin&hl=en-US&gl=US&ceid=US:en&num=15');
             const text = await res.text();
             const parser = new DOMParser();
             const xml = parser.parseFromString(text, 'text/xml');
             const items = xml.querySelectorAll('item');
-            if (items.length > 0) {
-                let allNews = [];
-                items.forEach(item => {
-                    const title = item.querySelector('title')?.textContent || '';
-                    const link = item.querySelector('link')?.textContent || '#';
-                    const pubDate = item.querySelector('pubDate')?.textContent || '';
-                    const source = item.querySelector('source')?.textContent || 'Google News';
-                    if (title) allNews.push({title: title.split(' - ')[0], source: source, time: pubDate ? timeAgoText(new Date(pubDate)) : '', link: link});
-                });
-                if (allNews.length > 0) {
-                    localStorage.setItem('dc_news_cache', JSON.stringify({data: allNews, time: Date.now()}));
-                    let html = '', count = 0;
-                    for (const news of allNews) {
-                        if (count >= 15) break;
-                        const titleFa = await translateToPersian(news.title);
-                        html += `<div class="news-card"><div class="news-title"><a href="${news.link}" target="_blank">${titleFa || news.title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${news.source}</span></span><span>${news.time}</span></div><div class="news-original">${news.title}</div></div>`;
-                        count++;
-                    }
-                    container.innerHTML = html;
-                    document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر کریپتو`;
-                } else { showCachedNews(container); }
-            } else { showCachedNews(container); }
-        } catch(e) { showCachedNews(container); }
-    }
-    
-    function showCachedNews(container) {
-        const cache = localStorage.getItem('dc_news_cache');
-        if (cache) {
-            const parsed = JSON.parse(cache);
+            if (items.length === 0) { container.innerHTML = '<div class="empty">❌ خبری پیدا نشد</div>'; return; }
             let html = '', count = 0;
-            for (const news of parsed.data.slice(0, 10)) {
-                html += `<div class="news-card"><div class="news-title"><a href="${news.link}" target="_blank">${news.title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${news.source}</span></span><span>${news.time}</span></div></div>`;
-                count++;
+            for (const item of items) {
+                if (count >= 10) break;
+                const title = item.querySelector('title')?.textContent?.split(' - ')[0] || '';
+                const link = item.querySelector('link')?.textContent || '#';
+                const pubDate = item.querySelector('pubDate')?.textContent || '';
+                const source = item.querySelector('source')?.textContent || 'Google News';
+                if (title) {
+                    html += `<div class="news-card"><div class="news-title"><a href="${link}" target="_blank">${title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${source}</span></span><span>${pubDate ? timeAgoText(new Date(pubDate)) : ''}</span></div></div>`;
+                    count++;
+                }
             }
-            container.innerHTML = html;
-            document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر (ذخیره‌شده)`;
-        } else {
-            container.innerHTML = '<div class="empty">⚠️ خطا در دریافت اخبار</div>';
-        }
-    }
-    
-    function loadAITab() {
-        document.getElementById('resultsCount').innerHTML = '🤖 Gemini AI - سوال بپرسید';
+            container.innerHTML = html || '<div class="empty">❌ خبری پیدا نشد</div>';
+            document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر کریپتو`;
+        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت اخبار</div>'; }
     }
     
     async function askAI() {
-        const input = document.getElementById('aiInput');
-        const question = input.value.trim();
+        const input = document.getElementById('aiInput'), question = input.value.trim();
         if (!question) return;
         const answersDiv = document.getElementById('aiAnswers');
         answersDiv.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت پاسخ...</div>';
         try {
-            const res = await fetch(`${API_URL}/ask-ai`, {
+            const res = await fetch('https://digitalcity-market.onrender.com/api/ask-ai', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: question })
             });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.answer && !data.answer.startsWith('⚠️')) {
-                    answersDiv.innerHTML = `<div class="ai-card"><div class="ai-question">💬 ${question}</div><div class="ai-answer">${data.answer}</div></div>${answersDiv.innerHTML}`;
-                    input.value = '';
-                    return;
-                }
-            }
-            answersDiv.innerHTML = '<div class="empty">⚠️ خطا در دریافت پاسخ. لطفاً دوباره تلاش کنید.</div>';
-        } catch(e) {
-            answersDiv.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور</div>';
-        }
-    }
-    
-    async function translateToPersian(text) {
-        if (!text) return null;
-        try {
-            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fa&dt=t&q=${encodeURIComponent(text.substring(0, 200))}`);
             const data = await res.json();
-            if (data && data[0] && data[0][0]) return data[0][0];
-        } catch(e) {}
-        return null;
+            answersDiv.innerHTML = `<div class="ai-card"><div class="ai-question">💬 ${question}</div><div class="ai-answer">${data.answer || '⚠️ خطا در دریافت پاسخ'}</div></div>${answersDiv.innerHTML}`;
+            input.value = '';
+        } catch(e) { answersDiv.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور</div>'; }
     }
     
     function timeAgoText(date) {
-        const now = new Date();
-        const diff = Math.floor((now - date) / 1000);
+        const now = new Date(), diff = Math.floor((now - date) / 1000);
         if (diff < 60) return 'همین الان';
         if (diff < 3600) return Math.floor(diff / 60) + ' دقیقه پیش';
         if (diff < 86400) return Math.floor(diff / 3600) + ' ساعت پیش';
@@ -709,16 +545,12 @@
     function saveWatchlist(list) { localStorage.setItem('dc_watchlist', JSON.stringify(list)); }
     
     function toggleWatchlist(id, name, symbol, image) {
-        let list = getWatchlist();
-        const idx = list.findIndex(w => w.id === id);
-        if (idx > -1) { list.splice(idx, 1); } else { list.push({id, name, symbol, image}); }
+        let list = getWatchlist(); const idx = list.findIndex(w => w.id === id);
+        if (idx > -1) list.splice(idx, 1); else list.push({id, name, symbol, image});
         saveWatchlist(list);
         const userId = tg?.initDataUnsafe?.user?.id || 'demo';
-        if (idx > -1) {
-            fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
-        } else {
-            fetch(`${API_URL}/watchlist/${userId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id, name, symbol, image}) }).catch(()=>{});
-        }
+        if (idx > -1) fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
+        else fetch(`${API_URL}/watchlist/${userId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id, name, symbol, image}) }).catch(()=>{});
         if (currentTab === 'watchlist') loadWatchlist();
         else if (currentTab === 'market') filterCoins();
         else if (currentTab === 'trends') loadTrendsTab();
@@ -726,9 +558,7 @@
     }
     
     function removeWatchlist(id) {
-        let list = getWatchlist();
-        list = list.filter(w => w.id !== id);
-        saveWatchlist(list);
+        let list = getWatchlist(); list = list.filter(w => w.id !== id); saveWatchlist(list);
         const userId = tg?.initDataUnsafe?.user?.id || 'demo';
         fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
         loadWatchlist();
@@ -738,29 +568,17 @@
     }
     
     function loadWatchlist() {
-        const container = document.getElementById('watchlistList');
-        const list = getWatchlist();
-        if (!list.length) { 
-            container.innerHTML = '<div class="empty-watchlist"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small></div>'; 
-            return; 
-        }
+        const container = document.getElementById('watchlistList'), list = getWatchlist();
+        if (!list.length) { container.innerHTML = '<div class="empty-watchlist"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small></div>'; return; }
         container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بارگذاری...</div>';
         const ids = list.map(w => w.id).join('%2C');
         fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`)
             .then(r => r.json())
             .then(data => {
                 if (data && data.length) renderCoins(data, container, true);
-                else {
-                    const ids_set = new Set(list.map(w => w.id));
-                    const filtered = marketData.filter(c => ids_set.has(c.id));
-                    renderCoins(filtered.length ? filtered : [], container, true);
-                }
+                else { const ids_set = new Set(list.map(w => w.id)); const filtered = marketData.filter(c => ids_set.has(c.id)); renderCoins(filtered.length ? filtered : [], container, true); }
             })
-            .catch(() => {
-                const ids_set = new Set(list.map(w => w.id));
-                const filtered = marketData.filter(c => ids_set.has(c.id));
-                renderCoins(filtered.length ? filtered : [], container, true);
-            });
+            .catch(() => { const ids_set = new Set(list.map(w => w.id)); const filtered = marketData.filter(c => ids_set.has(c.id)); renderCoins(filtered.length ? filtered : [], container, true); });
     }
     
     fetchAllCoins();
