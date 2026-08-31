@@ -33,54 +33,60 @@ async def get_prices():
     except:
         return []
 
-# ========== Open Interest از OKX (با fallback به Binance) ==========
+# ========== Open Interest از OKX (با تحلیل جریان پول) ==========
 @app.get("/api/coinglass/open-interest")
 async def get_open_interest():
-    # تلاش از OKX
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
+            # گرفتن تیکرها برای قیمت و تغییرات
+            tickers_res = await client.get(
+                "https://www.okx.com/api/v5/market/tickers",
+                params={"instType": "SWAP", "limit": "50"},
+                timeout=10.0
+            )
+            tickers_data = tickers_res.json()
+            
+            # گرفتن Open Interest
+            oi_res = await client.get(
                 "https://www.okx.com/api/v5/public/open-interest",
                 params={"instType": "SWAP", "limit": "50"},
                 timeout=10.0
             )
-            data = response.json()
+            oi_data = oi_res.json()
             
-            if isinstance(data, dict) and data.get("data") and len(data["data"]) > 0:
+            if isinstance(oi_data, dict) and oi_data.get("data") and isinstance(tickers_data, dict) and tickers_data.get("data"):
+                oi_list = oi_data["data"]
+                tickers = {t["instId"]: t for t in tickers_data["data"]}
+                
                 result = []
-                for item in data["data"]:
-                    result.append({
-                        "symbol": item.get("instId", ""),
-                        "openInterest": float(item.get("oi", 0) or 0),
-                        "openInterestUsd": float(item.get("oiCcy", 0) or 0)
-                    })
-                result.sort(key=lambda x: x.get("openInterestUsd", 0), reverse=True)
-                return {"data": result[:30], "source": "okx"}
-    except:
-        pass
-    
-    # Fallback به Binance
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://fapi.binance.com/fapi/v1/openInterest",
-                timeout=10.0
-            )
-            data = response.json()
-            
-            if isinstance(data, list) and len(data) > 0:
-                result = []
-                for item in data[:50]:
-                    symbol = item.get("symbol", "")
-                    oi = float(item.get("openInterest", 0) or 0)
+                for item in oi_list[:50]:
+                    symbol = item.get("instId", "")
+                    oi_value = float(item.get("oi", 0) or 0)
+                    oi_usd = float(item.get("oiCcy", 0) or 0)
+                    
+                    # گرفتن تغییر قیمت از ticker
+                    ticker = tickers.get(symbol, {})
+                    change_pct = float(ticker.get("priceChangePercent24h", 0) or 0)
+                    
+                    # تحلیل جهت
+                    if change_pct > 0.5:
+                        direction = "ورود پول"
+                    elif change_pct < -0.5:
+                        direction = "خروج پول"
+                    else:
+                        direction = "خنثی"
+                    
                     result.append({
                         "symbol": symbol,
-                        "openInterest": oi,
-                        "openInterestUsd": oi  # تقریبی
+                        "openInterest": oi_value,
+                        "openInterestUsd": oi_usd,
+                        "change_pct": change_pct,
+                        "direction": direction
                     })
+                
                 result.sort(key=lambda x: x.get("openInterestUsd", 0), reverse=True)
-                return {"data": result[:30], "source": "binance"}
-    except:
+                return {"data": result[:30], "source": "okx"}
+    except Exception as e:
         pass
     
     return {"error": "Open Interest در دسترس نیست", "data": []}
