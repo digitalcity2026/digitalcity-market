@@ -467,13 +467,23 @@
             const res = await fetch(`${API_URL}/coinglass/open-interest`);
             const data = await res.json();
             if (data?.data && data.data.length > 0) {
-                let html = '';
+                let html = '<div class="section-title">📊 Open Interest - تحلیل ورود/خروج پول</div>';
                 data.data.forEach(item => {
                     const oiUsd = item.openInterestUsd || 0;
-                    html += `<div class="derivatives-card"><div class="derivatives-title">${item.symbol}</div><div class="derivatives-row"><span class="derivatives-label">Open Interest</span><span class="derivatives-value">$${formatVolume(oiUsd)}</span></div><div class="derivatives-row"><span class="derivatives-label">تعداد قرارداد</span><span class="derivatives-value">${formatVolume(item.openInterest || 0)}</span></div></div>`;
+                    const changePct = item.change_pct || 0;
+                    const direction = item.direction || 'خنثی';
+                    const colorClass = changePct >= 0 ? 'up' : 'down';
+                    const arrow = changePct >= 0 ? '🟢' : '🔴';
+                    
+                    html += `<div class="derivatives-card">
+                        <div class="derivatives-title">${arrow} ${item.symbol}</div>
+                        <div class="derivatives-row"><span class="derivatives-label">Open Interest</span><span class="derivatives-value">$${formatVolume(oiUsd)}</span></div>
+                        <div class="derivatives-row"><span class="derivatives-label">تغییر قیمت ۲۴h</span><span class="derivatives-value ${colorClass}">${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%</span></div>
+                        <div class="derivatives-row"><span class="derivatives-label">سیگنال</span><span class="derivatives-value ${colorClass}">${direction}</span></div>
+                    </div>`;
                 });
                 container.innerHTML = html || '<div class="empty">❌ داده‌ای پیدا نشد</div>';
-                document.getElementById('resultsCount').innerHTML = '📊 Open Interest (OKX)';
+                document.getElementById('resultsCount').innerHTML = '📊 Open Interest (OKX) - تحلیل جریان پول';
             } else {
                 container.innerHTML = `<div class="empty">❌ ${data?.error || 'خطا در دریافت داده‌ها'}</div>`;
             }
