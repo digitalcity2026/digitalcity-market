@@ -13,8 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY", "")
-
 @app.get("/")
 def root():
     return {"status": "ok", "message": "DigitalCity Market API"}
@@ -35,101 +33,109 @@ async def get_prices():
     except:
         return []
 
-# ========== CoinGlass v1 Endpoints ==========
+# ========== Binance Funding Rate (رایگان) ==========
 @app.get("/api/coinglass/funding")
 async def get_funding():
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://open-api.coinglass.com/public/v1/funding_rates_oi",
-                headers={"CG-API-KEY": COINGLASS_API_KEY},
+            # گرفتن لیست نمادهای معتبر از Binance Futures
+            symbols_res = await client.get(
+                "https://fapi.binance.com/fapi/v1/exchangeInfo",
                 timeout=10.0
             )
-            data = response.json()
-            if "data" in data and data["data"]:
-                return data
-            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
+            symbols_data = symbols_res.json()
+            symbols = [s["symbol"] for s in symbols_data.get("symbols", []) if s.get("status") == "TRADING" and s["symbol"].endswith("USDT")]
+            
+            # گرفتن funding rate برای همه
+            funding_res = await client.get(
+                "https://fapi.binance.com/fapi/v1/premiumIndex",
+                timeout=10.0
+            )
+            funding_data = funding_res.json()
+            
+            # فیلتر فقط USDT pairs
+            filtered = [f for f in funding_data if f["symbol"].endswith("USDT")]
+            
+            # مرتب‌سازی بر اساس funding rate
+            filtered.sort(key=lambda x: float(x.get("lastFundingRate", 0)), reverse=True)
+            
+            return {"data": filtered[:50]}
     except Exception as e:
         return {"error": str(e)}
 
+# ========== Binance Liquidation (رایگان) ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
         async with httpx.AsyncClient() as client:
+            # گرفتن force orders اخیر
             response = await client.get(
-                "https://open-api.coinglass.com/public/v1/liquidation/history?time_type=h1",
-                headers={"CG-API-KEY": COINGLASS_API_KEY},
+                "https://fapi.binance.com/fapi/v1/allForceOrders?limit=50",
                 timeout=10.0
             )
-            data = response.json()
-            if "data" in data and data["data"]:
-                return data
-            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
+            orders = response.json()
+            
+            # محاسبه مجموع لانگ و شورت
+            long_liq = 0
+            short_liq = 0
+            symbols_liq = {}
+            
+            for order in orders:
+                price = float(order.get("price", 0))
+                qty = float(order.get("origQty", 0))
+                value = price * qty
+                symbol = order.get("symbol", "")
+                side = order.get("side", "")
+                
+                if side == "SELL":
+                    long_liq += value
+                else:
+                    short_liq += value
+                
+                if symbol not in symbols_liq:
+                    symbols_liq[symbol] = {"long": 0, "short": 0}
+                if side == "SELL":
+                    symbols_liq[symbol]["long"] += value
+                else:
+                    symbols_liq[symbol]["short"] += value
+            
+            return {
+                "data": {
+                    "total": {"long": long_liq, "short": short_liq},
+                    "symbols": [{"symbol": k, "total": v} for k, v in symbols_liq.items()]
+                }
+            }
     except Exception as e:
         return {"error": str(e)}
 
+# ========== Fear & Greed Index (رایگان - alternative.me) ==========
 @app.get("/api/coinglass/sentiment")
 async def get_sentiment():
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                "https://open-api.coinglass.com/public/v1/fear_greed_index",
-                headers={"CG-API-KEY": COINGLASS_API_KEY},
+                "https://api.alternative.me/fng/",
                 timeout=10.0
             )
             data = response.json()
-            if "data" in data and data["data"]:
-                return data
-            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
-    except Exception as e:
-        return {"error": str(e)}
-
-# ========== CoinGlass v2 Fallback ==========
-@app.get("/api/coinglass/funding-v2")
-async def get_funding_v2():
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://open-api.coinglass.com/public/v2/funding_rates",
-                headers={"CG-API-KEY": COINGLASS_API_KEY},
-                timeout=10.0
-            )
-            data = response.json()
-            if "data" in data and data["data"]:
-                return data
-            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/coinglass/liquidation-v2")
-async def get_liquidation_v2():
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://open-api.coinglass.com/public/v2/liquidation/info?time_type=h1",
-                headers={"CG-API-KEY": COINGLASS_API_KEY},
-                timeout=10.0
-            )
-            data = response.json()
-            if "data" in data and data["data"]:
-                return data
-            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/coinglass/sentiment-v2")
-async def get_sentiment_v2():
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://open-api.coinglass.com/public/v2/fear_greed",
-                headers={"CG-API-KEY": COINGLASS_API_KEY},
-                timeout=10.0
-            )
-            data = response.json()
-            if "data" in data and data["data"]:
-                return data
-            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
+            
+            if data.get("data") and len(data["data"]) > 0:
+                item = data["data"][0]
+                value = int(item.get("value", 50))
+                label = item.get("value_classification", "خنثی")
+                
+                # ترجمه label به فارسی
+                fa_labels = {
+                    "Extreme Fear": "ترس شدید",
+                    "Fear": "ترس",
+                    "Neutral": "خنثی",
+                    "Greed": "طمع",
+                    "Extreme Greed": "طمع شدید"
+                }
+                label_fa = fa_labels.get(label, label)
+                
+                return {"data": [{"value": value, "label": label_fa}]}
+            return {"error": "No data"}
     except Exception as e:
         return {"error": str(e)}
 
