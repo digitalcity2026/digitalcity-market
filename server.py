@@ -33,97 +33,91 @@ async def get_prices():
     except:
         return []
 
-# ========== Funding Rate از KCEx ==========
+# ========== Funding Rate ==========
+# تلاش از چند صرافی مختلف - هرکدوم جواب داد استفاده کن
 @app.get("/api/coinglass/funding")
 async def get_funding():
-    try:
-        async with httpx.AsyncClient() as client:
-            # KCEx API - گرفتن تیکرهای فیوچرز
-            response = await client.get(
-                "https://api.kcex.com/api/v1/tickers",
-                timeout=10.0
-            )
-            data = response.json()
-            
-            if isinstance(data, dict) and data.get("data"):
-                tickers = data["data"]
-                result = []
-                for t in tickers:
-                    symbol = t.get("symbol", "")
-                    funding_rate = float(t.get("fundingRate", t.get("funding_rate", 0)) or 0)
-                    result.append({
-                        "symbol": symbol,
-                        "lastFundingRate": funding_rate
-                    })
+    # لیست API های مختلف
+    apis = [
+        {"url": "https://fapi.binance.com/fapi/v1/premiumIndex", "type": "binance"},
+        {"url": "https://api-futures.kucoin.com/api/v1/funding-history?limit=100", "type": "kucoin"},
+        {"url": "https://api.bybit.com/v5/market/tickers?category=linear", "type": "bybit"},
+    ]
+    
+    for api in apis:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(api["url"], timeout=8.0)
+                data = response.json()
                 
-                result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
-                return {"data": result[:50]}
-            elif isinstance(data, list):
-                result = []
-                for t in data:
-                    symbol = t.get("symbol", "")
-                    funding_rate = float(t.get("fundingRate", t.get("funding_rate", 0)) or 0)
-                    result.append({
-                        "symbol": symbol,
-                        "lastFundingRate": funding_rate
-                    })
-                result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
-                return {"data": result[:50]}
-            else:
-                return {"error": str(data)[:500]}
-    except Exception as e:
-        return {"error": str(e)}
+                if api["type"] == "binance" and isinstance(data, list) and len(data) > 0:
+                    filtered = [item for item in data if isinstance(item, dict) and item.get("symbol", "").endswith("USDT")]
+                    filtered.sort(key=lambda x: float(x.get("lastFundingRate", 0) or 0), reverse=True)
+                    return {"data": filtered[:50], "source": "binance"}
+                
+                elif api["type"] == "kucoin" and isinstance(data, dict) and data.get("data"):
+                    funding_data = data["data"]
+                    latest = {}
+                    for item in funding_data:
+                        symbol = item.get("symbol", "")
+                        rate = float(item.get("fundingRate", 0) or 0)
+                        if symbol not in latest:
+                            latest[symbol] = rate
+                    result = [{"symbol": k, "lastFundingRate": v} for k, v in latest.items()]
+                    result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
+                    return {"data": result[:50], "source": "kucoin"}
+                
+                elif api["type"] == "bybit" and isinstance(data, dict) and data.get("result", {}).get("list"):
+                    tickers = data["result"]["list"]
+                    result = []
+                    for t in tickers:
+                        result.append({
+                            "symbol": t.get("symbol", ""),
+                            "lastFundingRate": float(t.get("fundingRate", 0) or 0)
+                        })
+                    result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
+                    return {"data": result[:50], "source": "bybit"}
+        except:
+            continue
+    
+    # اگه هیچکدوم کار نکرد
+    return {"error": "هیچ صرافی در دسترس نیست", "data": []}
 
-# ========== Liquidation از KCEx ==========
+# ========== Liquidation ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
         async with httpx.AsyncClient() as client:
-            # KCEx liquidation orders
-            response = await client.get(
-                "https://api.kcex.com/api/v1/liquidation",
-                timeout=10.0
-            )
-            data = response.json()
-            
-            if isinstance(data, dict) and data.get("data"):
-                orders = data["data"]
-                if isinstance(orders, list):
-                    long_liq = 0
-                    short_liq = 0
-                    symbols_liq = {}
-                    
-                    for order in orders:
-                        if not isinstance(order, dict):
-                            continue
-                        try:
-                            price = float(order.get("price", order.get("avgPrice", 0)) or 0)
-                            qty = float(order.get("qty", order.get("amount", 0)) or 0)
-                            value = price * qty
-                            symbol = order.get("symbol", "")
-                            side = order.get("side", "").upper()
-                            
-                            if side in ("SELL", "SHORT"):
-                                long_liq += value
-                            else:
-                                short_liq += value
-                            
-                            if symbol not in symbols_liq:
-                                symbols_liq[symbol] = {"long": 0, "short": 0}
-                            if side in ("SELL", "SHORT"):
-                                symbols_liq[symbol]["long"] += value
-                            else:
-                                symbols_liq[symbol]["short"] += value
-                        except:
-                            continue
-                    
+            # تلاش از KuCoin
+            try:
+                response = await client.get(
+                    "https://api-futures.kucoin.com/api/v1/contracts/active",
+                    timeout=5.0
+                )
+                contracts = response.json()
+                
+                if isinstance(contracts, dict) and contracts.get("data"):
+                    # ساخت داده نمونه از قراردادهای فعال
+                    symbols = [c.get("symbol", "") for c in contracts["data"][:20]]
                     return {
                         "data": {
-                            "total": {"long": long_liq, "short": short_liq},
-                            "symbols": [{"symbol": k, "total": v} for k, v in list(symbols_liq.items())[:20]]
-                        }
+                            "total": {"long": 0, "short": 0},
+                            "symbols": [{"symbol": s, "total": {"long": 0, "short": 0}} for s in symbols]
+                        },
+                        "source": "kucoin",
+                        "note": "داده کامل لیکوئید در دسترس نیست"
                     }
-            return {"error": str(data)[:500]}
+            except:
+                pass
+            
+            # Fallback
+            return {
+                "data": {
+                    "total": {"long": 0, "short": 0},
+                    "symbols": []
+                },
+                "note": "داده لیکوئید در دسترس نیست"
+            }
     except Exception as e:
         return {"error": str(e)}
 
