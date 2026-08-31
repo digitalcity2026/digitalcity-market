@@ -282,7 +282,7 @@
         <button class="tab active" onclick="switchTab('market')">📊 بازار</button>
         <button class="tab" onclick="switchTab('trends')">🔥 ترندها</button>
         <button class="tab" onclick="switchTab('rsi')">📈 RSI</button>
-        <button class="tab" onclick="switchTab('funding')">💰 فاندینگ</button>
+        <button class="tab" onclick="switchTab('oi')">📊 OI</button>
         <button class="tab" onclick="switchTab('liquidation')">💥 لیکوئید</button>
         <button class="tab" onclick="switchTab('sentiment')">🎯 احساسات</button>
         <button class="tab" onclick="switchTab('watchlist')">⭐ واچ‌لیست</button>
@@ -293,7 +293,7 @@
     <div class="tab-content active" id="market-tab"><div class="coin-list" id="marketList"><div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div></div></div>
     <div class="tab-content" id="trends-tab"><div class="coin-list" id="trendsList"><div class="empty">در حال بارگذاری ترندها...</div></div></div>
     <div class="tab-content" id="rsi-tab"><div class="coin-list" id="rsiList"><div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div></div></div>
-    <div class="tab-content" id="funding-tab"><div class="coin-list" id="fundingList"><div class="loading"><div class="spinner"></div>در حال دریافت نرخ فاندینگ...</div></div></div>
+    <div class="tab-content" id="oi-tab"><div class="coin-list" id="oiList"><div class="loading"><div class="spinner"></div>در حال دریافت Open Interest...</div></div></div>
     <div class="tab-content" id="liquidation-tab"><div class="coin-list" id="liquidationList"><div class="loading"><div class="spinner"></div>در حال دریافت لیکوئید شدن‌ها...</div></div></div>
     <div class="tab-content" id="sentiment-tab"><div class="coin-list" id="sentimentList"><div class="loading"><div class="spinner"></div>در حال دریافت احساسات بازار...</div></div></div>
     <div class="tab-content" id="watchlist-tab"><div class="coin-list" id="watchlistList"><div class="empty-watchlist">⭐ هنوز ارزی اضافه نکردی!</div></div></div>
@@ -321,7 +321,7 @@
         if (tab === 'market') { document.getElementById('searchInput').value = ''; if (marketData.length === 0) fetchAllCoins(); else { renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false); document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز لود شده`; } }
         if (tab === 'trends') loadTrendsTab();
         if (tab === 'rsi') loadRSITab();
-        if (tab === 'funding') loadFundingTab();
+        if (tab === 'oi') loadOITab();
         if (tab === 'liquidation') loadLiquidationTab();
         if (tab === 'sentiment') loadSentimentTab();
         if (tab === 'watchlist') loadWatchlist();
@@ -460,26 +460,24 @@
         else { container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`; document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`; }
     }
     
-    async function loadFundingTab() {
-        const container = document.getElementById('fundingList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت نرخ فاندینگ...</div>';
+    async function loadOITab() {
+        const container = document.getElementById('oiList');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت Open Interest...</div>';
         try {
-            const res = await fetch(`${API_URL}/coinglass/funding`);
+            const res = await fetch(`${API_URL}/coinglass/open-interest`);
             const data = await res.json();
             if (data?.data && data.data.length > 0) {
                 let html = '';
-                data.data.slice(0, 30).forEach(item => {
-                    const symbol = item.symbol || '';
-                    const fundingRate = parseFloat(item.lastFundingRate || 0);
-                    const rateClass = fundingRate >= 0 ? 'up' : 'down';
-                    html += `<div class="derivatives-card"><div class="derivatives-title">${symbol}</div><div class="derivatives-row"><span class="derivatives-label">نرخ فاندینگ</span><span class="derivatives-value ${rateClass}">${(fundingRate * 100).toFixed(4)}%</span></div></div>`;
+                data.data.forEach(item => {
+                    const oiUsd = item.openInterestUsd || 0;
+                    html += `<div class="derivatives-card"><div class="derivatives-title">${item.symbol}</div><div class="derivatives-row"><span class="derivatives-label">Open Interest</span><span class="derivatives-value">$${formatVolume(oiUsd)}</span></div><div class="derivatives-row"><span class="derivatives-label">تعداد قرارداد</span><span class="derivatives-value">${formatVolume(item.openInterest || 0)}</span></div></div>`;
                 });
                 container.innerHTML = html || '<div class="empty">❌ داده‌ای پیدا نشد</div>';
-                document.getElementById('resultsCount').innerHTML = '💰 نرخ فاندینگ (Binance Futures)';
+                document.getElementById('resultsCount').innerHTML = '📊 Open Interest (OKX)';
             } else {
                 container.innerHTML = `<div class="empty">❌ ${data?.error || 'خطا در دریافت داده‌ها'}</div>`;
             }
-        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت نرخ فاندینگ</div>'; }
+        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت Open Interest</div>'; }
     }
     
     async function loadLiquidationTab() {
@@ -489,12 +487,12 @@
             const res = await fetch(`${API_URL}/coinglass/liquidation`);
             const data = await res.json();
             if (data?.data) {
-                let html = '<div class="section-title">🔥 لیکوئید شدن‌های اخیر (Binance)</div>';
+                let html = '<div class="section-title">🔥 لیکوئید شدن‌های اخیر (OKX)</div>';
                 const d = data.data;
                 const total = d.total || {};
                 html += `<div class="derivatives-card"><div class="derivatives-title">کل بازار</div><div class="derivatives-row"><span class="derivatives-label">لیکوئید لانگ</span><span class="derivatives-value liq-long">$${formatVolume(total.long || 0)}</span></div><div class="derivatives-row"><span class="derivatives-label">لیکوئید شورت</span><span class="derivatives-value liq-short">$${formatVolume(total.short || 0)}</span></div></div>`;
                 if (d.symbols && d.symbols.length > 0) {
-                    d.symbols.slice(0, 20).forEach(s => {
+                    d.symbols.forEach(s => {
                         const longLiq = s.total?.long || 0;
                         const shortLiq = s.total?.short || 0;
                         html += `<div class="liquidation-card"><strong>${s.symbol || ''}</strong><br><span class="liq-long">لانگ: $${formatVolume(longLiq)}</span> | <span class="liq-short">شورت: $${formatVolume(shortLiq)}</span></div>`;
