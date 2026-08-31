@@ -32,7 +32,7 @@ async def get_prices():
     except:
         return []
 
-# ========== CoinGlass Endpoints ==========
+# ========== CoinGlass - نسخه ساده ==========
 COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY", "")
 
 @app.get("/api/coinglass/funding")
@@ -44,9 +44,14 @@ async def get_funding():
                 headers={"CG-API-KEY": COINGLASS_API_KEY},
                 timeout=10.0
             )
-            return response.json()
-    except:
-        return {}
+            data = response.json()
+            # چک کن خطا نداشته باشه
+            if "data" in data and data["data"]:
+                return data
+            else:
+                return {"error": data.get("msg", "No data")}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
@@ -57,9 +62,13 @@ async def get_liquidation():
                 headers={"CG-API-KEY": COINGLASS_API_KEY},
                 timeout=10.0
             )
-            return response.json()
-    except:
-        return {}
+            data = response.json()
+            if "data" in data and data["data"]:
+                return data
+            else:
+                return {"error": data.get("msg", "No data")}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/api/coinglass/sentiment")
 async def get_sentiment():
@@ -70,11 +79,15 @@ async def get_sentiment():
                 headers={"CG-API-KEY": COINGLASS_API_KEY},
                 timeout=10.0
             )
-            return response.json()
-    except:
-        return {}
+            data = response.json()
+            if "data" in data and data["data"]:
+                return data
+            else:
+                return {"error": data.get("msg", "No data")}
+    except Exception as e:
+        return {"error": str(e)}
 
-# ========== Watchlist Endpoints ==========
+# ========== Watchlist ==========
 @app.get("/api/watchlist/{user_id}")
 async def get_watchlist(user_id: str):
     import json
