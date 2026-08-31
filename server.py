@@ -33,78 +33,97 @@ async def get_prices():
     except:
         return []
 
-# ========== Funding Rate از Binance ==========
+# ========== Funding Rate از Bybit ==========
 @app.get("/api/coinglass/funding")
 async def get_funding():
     try:
         async with httpx.AsyncClient() as client:
+            # گرفتن tickers از Bybit
             response = await client.get(
-                "https://fapi.binance.com/fapi/v1/premiumIndex",
+                "https://api.bybit.com/v5/market/tickers",
+                params={"category": "linear", "limit": 100},
                 timeout=10.0
             )
             data = response.json()
             
-            # چک کن لیست باشه
-            if isinstance(data, list):
-                # فیلتر USDT pairs
-                filtered = [item for item in data if isinstance(item, dict) and item.get("symbol", "").endswith("USDT")]
+            if isinstance(data, dict) and data.get("result", {}).get("list"):
+                tickers = data["result"]["list"]
+                filtered = []
+                for t in tickers:
+                    symbol = t.get("symbol", "")
+                    funding_rate = float(t.get("fundingRate", 0) or 0)
+                    filtered.append({
+                        "symbol": symbol,
+                        "lastFundingRate": funding_rate
+                    })
+                
                 # مرتب‌سازی
-                filtered.sort(key=lambda x: float(x.get("lastFundingRate", 0) or 0), reverse=True)
+                filtered.sort(key=lambda x: x["lastFundingRate"], reverse=True)
                 return {"data": filtered[:50]}
             else:
-                return {"error": str(data)[:200]}
+                return {"error": str(data)[:300]}
     except Exception as e:
         return {"error": str(e)}
 
-# ========== Liquidation از Binance ==========
+# ========== Liquidation از Binance (با fallback) ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://fapi.binance.com/fapi/v1/allForceOrders?limit=100",
-                timeout=10.0
-            )
-            orders = response.json()
-            
-            if isinstance(orders, list) and len(orders) > 0:
-                long_liq = 0
-                short_liq = 0
-                symbols_liq = {}
+        # تلاش از Binance اول
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://fapi.binance.com/fapi/v1/allForceOrders?limit=100",
+                    timeout=5.0
+                )
+                orders = response.json()
                 
-                for order in orders:
-                    if not isinstance(order, dict):
-                        continue
+                if isinstance(orders, list) and len(orders) > 0:
+                    long_liq = 0
+                    short_liq = 0
+                    symbols_liq = {}
                     
-                    try:
-                        price = float(order.get("avgPrice", order.get("price", 0)) or 0)
-                        qty = float(order.get("executedQty", order.get("origQty", 0)) or 0)
-                        value = price * qty
-                        symbol = order.get("symbol", "")
-                        side = order.get("side", "")
-                        
-                        if side == "SELL":
-                            long_liq += value
-                        else:
-                            short_liq += value
-                        
-                        if symbol not in symbols_liq:
-                            symbols_liq[symbol] = {"long": 0, "short": 0}
-                        if side == "SELL":
-                            symbols_liq[symbol]["long"] += value
-                        else:
-                            symbols_liq[symbol]["short"] += value
-                    except:
-                        continue
-                
-                return {
-                    "data": {
-                        "total": {"long": long_liq, "short": short_liq},
-                        "symbols": [{"symbol": k, "total": v} for k, v in list(symbols_liq.items())[:20]]
+                    for order in orders:
+                        if not isinstance(order, dict):
+                            continue
+                        try:
+                            price = float(order.get("avgPrice", 0) or 0)
+                            qty = float(order.get("executedQty", order.get("origQty", 0)) or 0)
+                            value = price * qty
+                            symbol = order.get("symbol", "")
+                            side = order.get("side", "")
+                            
+                            if side == "SELL":
+                                long_liq += value
+                            else:
+                                short_liq += value
+                            
+                            if symbol not in symbols_liq:
+                                symbols_liq[symbol] = {"long": 0, "short": 0}
+                            if side == "SELL":
+                                symbols_liq[symbol]["long"] += value
+                            else:
+                                symbols_liq[symbol]["short"] += value
+                        except:
+                            continue
+                    
+                    return {
+                        "data": {
+                            "total": {"long": long_liq, "short": short_liq},
+                            "symbols": [{"symbol": k, "total": v} for k, v in list(symbols_liq.items())[:20]]
+                        }
                     }
-                }
-            else:
-                return {"error": "No liquidation data"}
+        except:
+            pass
+        
+        # Fallback: داده‌های نمونه
+        return {
+            "data": {
+                "total": {"long": 0, "short": 0},
+                "symbols": []
+            },
+            "note": "Binance API از این لوکیشن در دسترس نیست"
+        }
     except Exception as e:
         return {"error": str(e)}
 
