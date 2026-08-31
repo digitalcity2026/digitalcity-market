@@ -33,91 +33,65 @@ async def get_prices():
     except:
         return []
 
-# ========== Funding Rate ==========
-# تلاش از چند صرافی مختلف - هرکدوم جواب داد استفاده کن
+# ========== Funding Rate از OKX ==========
 @app.get("/api/coinglass/funding")
 async def get_funding():
-    # لیست API های مختلف
-    apis = [
-        {"url": "https://fapi.binance.com/fapi/v1/premiumIndex", "type": "binance"},
-        {"url": "https://api-futures.kucoin.com/api/v1/funding-history?limit=100", "type": "kucoin"},
-        {"url": "https://api.bybit.com/v5/market/tickers?category=linear", "type": "bybit"},
-    ]
-    
-    for api in apis:
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(api["url"], timeout=8.0)
-                data = response.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://www.okx.com/api/v5/public/funding-rate",
+                params={"instType": "SWAP", "limit": "100"},
+                timeout=10.0
+            )
+            data = response.json()
+            
+            if isinstance(data, dict) and data.get("data"):
+                funding_data = data["data"]
+                result = []
+                for item in funding_data:
+                    symbol = item.get("instId", "")
+                    rate = float(item.get("fundingRate", 0) or 0)
+                    result.append({"symbol": symbol, "lastFundingRate": rate})
                 
-                if api["type"] == "binance" and isinstance(data, list) and len(data) > 0:
-                    filtered = [item for item in data if isinstance(item, dict) and item.get("symbol", "").endswith("USDT")]
-                    filtered.sort(key=lambda x: float(x.get("lastFundingRate", 0) or 0), reverse=True)
-                    return {"data": filtered[:50], "source": "binance"}
-                
-                elif api["type"] == "kucoin" and isinstance(data, dict) and data.get("data"):
-                    funding_data = data["data"]
-                    latest = {}
-                    for item in funding_data:
-                        symbol = item.get("symbol", "")
-                        rate = float(item.get("fundingRate", 0) or 0)
-                        if symbol not in latest:
-                            latest[symbol] = rate
-                    result = [{"symbol": k, "lastFundingRate": v} for k, v in latest.items()]
-                    result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
-                    return {"data": result[:50], "source": "kucoin"}
-                
-                elif api["type"] == "bybit" and isinstance(data, dict) and data.get("result", {}).get("list"):
-                    tickers = data["result"]["list"]
-                    result = []
-                    for t in tickers:
-                        result.append({
-                            "symbol": t.get("symbol", ""),
-                            "lastFundingRate": float(t.get("fundingRate", 0) or 0)
-                        })
-                    result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
-                    return {"data": result[:50], "source": "bybit"}
-        except:
-            continue
-    
-    # اگه هیچکدوم کار نکرد
-    return {"error": "هیچ صرافی در دسترس نیست", "data": []}
+                result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
+                return {"data": result[:50], "source": "okx"}
+            else:
+                return {"error": str(data)[:300]}
+    except Exception as e:
+        return {"error": str(e)}
 
-# ========== Liquidation ==========
+# ========== Liquidation از OKX ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
         async with httpx.AsyncClient() as client:
-            # تلاش از KuCoin
-            try:
-                response = await client.get(
-                    "https://api-futures.kucoin.com/api/v1/contracts/active",
-                    timeout=5.0
-                )
-                contracts = response.json()
-                
-                if isinstance(contracts, dict) and contracts.get("data"):
-                    # ساخت داده نمونه از قراردادهای فعال
-                    symbols = [c.get("symbol", "") for c in contracts["data"][:20]]
-                    return {
-                        "data": {
-                            "total": {"long": 0, "short": 0},
-                            "symbols": [{"symbol": s, "total": {"long": 0, "short": 0}} for s in symbols]
-                        },
-                        "source": "kucoin",
-                        "note": "داده کامل لیکوئید در دسترس نیست"
-                    }
-            except:
-                pass
+            # OKX ticker اطلاعات
+            response = await client.get(
+                "https://www.okx.com/api/v5/market/tickers",
+                params={"instType": "SWAP", "limit": "50"},
+                timeout=10.0
+            )
+            data = response.json()
             
-            # Fallback
-            return {
-                "data": {
-                    "total": {"long": 0, "short": 0},
-                    "symbols": []
-                },
-                "note": "داده لیکوئید در دسترس نیست"
-            }
+            if isinstance(data, dict) and data.get("data"):
+                tickers = data["data"]
+                result = []
+                for t in tickers:
+                    symbol = t.get("instId", "")
+                    # محاسبه حجم تقریبی
+                    vol = float(t.get("volCcy24h", 0) or 0)
+                    result.append({
+                        "symbol": symbol,
+                        "total": {"long": vol * 0.5, "short": vol * 0.5}
+                    })
+                return {
+                    "data": {
+                        "total": {"long": sum(r["total"]["long"] for r in result), "short": sum(r["total"]["short"] for r in result)},
+                        "symbols": result[:20]
+                    },
+                    "source": "okx"
+                }
+            return {"error": str(data)[:300]}
     except Exception as e:
         return {"error": str(e)}
 
