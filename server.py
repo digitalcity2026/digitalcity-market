@@ -33,18 +33,17 @@ async def get_prices():
     except:
         return []
 
-# ========== Open Interest (تحلیل جریان پول از CoinGecko) ==========
+# ========== Open Interest (بدون استیبل کوین + آستانه ۳٪) ==========
 @app.get("/api/coinglass/open-interest")
 async def get_open_interest():
     try:
         async with httpx.AsyncClient() as client:
-            # گرفتن ۳۰ ارز برتر با اطلاعات کامل
             response = await client.get(
                 "https://api.coingecko.com/api/v3/coins/markets",
                 params={
                     "vs_currency": "usd",
                     "order": "market_cap_desc",
-                    "per_page": 30,
+                    "per_page": 50,
                     "page": 1,
                     "sparkline": "false",
                     "price_change_percentage": "24h"
@@ -53,22 +52,28 @@ async def get_open_interest():
             )
             coins = response.json()
             
+            # استیبل کوین ها
+            stablecoins = ['tether', 'usd-coin', 'dai', 'binance-usd', 'true-usd', 'paxos-standard', 'usdd', 'frax', 'first-digital-usd']
+            
             if isinstance(coins, list) and len(coins) > 0:
                 result = []
                 for coin in coins:
+                    # حذف استیبل کوین ها
+                    if coin.get("id", "").lower() in stablecoins:
+                        continue
+                    
                     symbol = coin.get("symbol", "").upper()
                     current_price = float(coin.get("current_price", 0) or 0)
                     change_pct = float(coin.get("price_change_percentage_24h", 0) or 0)
                     volume_24h = float(coin.get("total_volume", 0) or 0)
                     market_cap = float(coin.get("market_cap", 0) or 0)
                     
-                    # محاسبه OI تقریبی از حجم
-                    # معمولاً OI حدود ۵-۱۵٪ حجم ۲۴ ساعته‌ست
                     oi_usd = volume_24h * 0.08
                     
-                    if change_pct > 0:
+                    # آستانه ۳٪
+                    if change_pct > 3:
                         direction = "ورود پول"
-                    elif change_pct < 0:
+                    elif change_pct < -3:
                         direction = "خروج پول"
                     else:
                         direction = "خنثی"
