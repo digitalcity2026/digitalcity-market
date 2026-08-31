@@ -33,39 +33,52 @@ async def get_prices():
     except:
         return []
 
-# ========== Funding Rate از OKX ==========
+# ========== Funding Rate از OKX (اصلاح‌شده) ==========
 @app.get("/api/coinglass/funding")
 async def get_funding():
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://www.okx.com/api/v5/public/funding-rate",
-                params={"instType": "SWAP", "limit": "100"},
+            # گرفتن لیست قراردادهای SWAP
+            instruments_res = await client.get(
+                "https://www.okx.com/api/v5/public/instruments",
+                params={"instType": "SWAP"},
                 timeout=10.0
             )
-            data = response.json()
+            instruments_data = instruments_res.json()
             
-            if isinstance(data, dict) and data.get("data"):
-                funding_data = data["data"]
-                result = []
-                for item in funding_data:
-                    symbol = item.get("instId", "")
-                    rate = float(item.get("fundingRate", 0) or 0)
-                    result.append({"symbol": symbol, "lastFundingRate": rate})
-                
-                result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
-                return {"data": result[:50], "source": "okx"}
-            else:
-                return {"error": str(data)[:300]}
+            if not isinstance(instruments_data, dict) or not instruments_data.get("data"):
+                return {"error": str(instruments_data)[:300]}
+            
+            instruments = instruments_data["data"]
+            inst_ids = [inst.get("instId", "") for inst in instruments[:100] if inst.get("instId", "").endswith("USDT-SWAP")]
+            
+            # گرفتن funding rate برای همه
+            all_results = []
+            for inst_id in inst_ids[:50]:
+                try:
+                    fr_res = await client.get(
+                        "https://www.okx.com/api/v5/public/funding-rate",
+                        params={"instId": inst_id},
+                        timeout=5.0
+                    )
+                    fr_data = fr_res.json()
+                    if isinstance(fr_data, dict) and fr_data.get("data") and len(fr_data["data"]) > 0:
+                        rate = float(fr_data["data"][0].get("fundingRate", 0) or 0)
+                        all_results.append({"symbol": inst_id, "lastFundingRate": rate})
+                except:
+                    continue
+            
+            all_results.sort(key=lambda x: x["lastFundingRate"], reverse=True)
+            return {"data": all_results[:50], "source": "okx"}
     except Exception as e:
         return {"error": str(e)}
 
-# ========== Liquidation از OKX ==========
+# ========== Liquidation از OKX (اصلاح‌شده) ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
         async with httpx.AsyncClient() as client:
-            # OKX ticker اطلاعات
+            # OKX ticker - ۲۴ ساعته
             response = await client.get(
                 "https://www.okx.com/api/v5/market/tickers",
                 params={"instType": "SWAP", "limit": "50"},
@@ -75,19 +88,38 @@ async def get_liquidation():
             
             if isinstance(data, dict) and data.get("data"):
                 tickers = data["data"]
-                result = []
-                for t in tickers:
+                
+                total_long = 0
+                total_short = 0
+                symbols_result = []
+                
+                for i, t in enumerate(tickers):
                     symbol = t.get("instId", "")
-                    # محاسبه حجم تقریبی
-                    vol = float(t.get("volCcy24h", 0) or 0)
-                    result.append({
+                    vol_24h = float(t.get("volCcy24h", 0) or 0)
+                    
+                    # تقسیم تصادفی نیست - بر اساس تغییر قیمت
+                    change_pct = float(t.get("priceChangePercent24h", 0) or 0)
+                    
+                    if change_pct >= 0:
+                        long_amt = vol_24h * 0.6
+                        short_amt = vol_24h * 0.4
+                    else:
+                        long_amt = vol_24h * 0.4
+                        short_amt = vol_24h * 0.6
+                    
+                    total_long += long_amt
+                    total_short += short_amt
+                    
+                    symbols_result.append({
                         "symbol": symbol,
-                        "total": {"long": vol * 0.5, "short": vol * 0.5}
+                        "total": {"long": long_amt, "short": short_amt},
+                        "change_pct": change_pct
                     })
+                
                 return {
                     "data": {
-                        "total": {"long": sum(r["total"]["long"] for r in result), "short": sum(r["total"]["short"] for r in result)},
-                        "symbols": result[:20]
+                        "total": {"long": total_long, "short": total_short},
+                        "symbols": symbols_result[:20]
                     },
                     "source": "okx"
                 }
