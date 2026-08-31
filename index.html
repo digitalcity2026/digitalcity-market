@@ -108,15 +108,15 @@
             flex-wrap: wrap;
         }
         .tab {
-            flex: 1; min-width: 55px; padding: 9px 5px; border-radius: 12px;
+            flex: 1; min-width: 50px; padding: 9px 4px; border-radius: 12px;
             border: 1px solid var(--border); background: var(--card);
-            color: var(--text2); font-size: 10px; font-weight: 500;
+            color: var(--text2); font-size: 9px; font-weight: 500;
             cursor: pointer; text-align: center; font-family: 'Vazirmatn', sans-serif;
             transition: all 0.3s; display: flex; align-items: center;
             justify-content: center; gap: 3px; white-space: nowrap;
         }
         .tab.active { background: var(--glass); border-color: var(--purple); color: var(--purple); font-weight: 700; }
-        .tab svg { flex-shrink: 0; width: 12px; height: 12px; }
+        .tab svg { flex-shrink: 0; width: 11px; height: 11px; }
         
         .coin-list { padding: 20px 16px 20px; position: relative; z-index: 1; }
         .coin-card {
@@ -137,7 +137,7 @@
         .coin-info { flex: 1; min-width: 100px; }
         .coin-name { font-weight: 700; font-size: 13px; }
         .coin-symbol { font-size: 10px; color: var(--text2); }
-        .coin-price { text-align: left; flex-shrink: 0; min-width: 100px; }
+        .coin-price { text-align: left; flex-shrink: 0; min-width: 90px; }
         .coin-price .price { font-weight: 900; font-size: 14px; }
         .coin-price .change { font-size: 11px; font-weight: 500; }
         .up { color: var(--green); }
@@ -173,54 +173,23 @@
             font-size: 14px; font-weight: 700; cursor: pointer;
         }
         
-        .news-card {
+        .derivatives-card {
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; padding: 14px; margin-bottom: 10px;
             backdrop-filter: blur(10px);
         }
-        .news-title {
+        .derivatives-title {
             font-weight: 700; font-size: 14px; margin-bottom: 8px;
-            line-height: 1.5; color: var(--text);
+            color: var(--purple);
         }
-        .news-title a { color: var(--text); text-decoration: none; }
-        .news-meta {
+        .derivatives-row {
             display: flex; justify-content: space-between;
-            font-size: 10px; color: var(--text2); margin-bottom: 6px;
+            padding: 6px 0; border-bottom: 1px solid var(--border);
+            font-size: 12px;
         }
-        .news-source {
-            display: inline-block; padding: 2px 8px; border-radius: 8px;
-            font-size: 9px; font-weight: 700; margin-right: 6px;
-            background: var(--glass); color: var(--purple);
-        }
-        
-        .ai-card {
-            background: var(--card); border: 1px solid var(--purple);
-            border-radius: 16px; padding: 14px; margin-bottom: 10px;
-            backdrop-filter: blur(10px);
-        }
-        .ai-question {
-            font-weight: 700; font-size: 13px; color: var(--purple);
-            margin-bottom: 8px;
-        }
-        .ai-answer {
-            font-size: 13px; color: var(--text);
-            line-height: 1.7; white-space: pre-wrap;
-        }
-        .ai-input-group {
-            display: flex; gap: 8px; margin-bottom: 16px;
-        }
-        .ai-input-group input {
-            flex: 1; padding: 12px; border-radius: 14px;
-            background: var(--card); border: 1px solid var(--border);
-            color: var(--text); font-family: 'Vazirmatn', sans-serif;
-            font-size: 13px; outline: none;
-        }
-        .ai-input-group button {
-            padding: 12px 20px; border-radius: 14px;
-            background: linear-gradient(135deg, var(--purple), var(--blue));
-            color: white; border: none; font-family: 'Vazirmatn', sans-serif;
-            font-size: 13px; font-weight: 700; cursor: pointer;
-        }
+        .derivatives-row:last-child { border-bottom: none; }
+        .derivatives-label { color: var(--text2); }
+        .derivatives-value { font-weight: 700; }
         
         .results-count {
             font-size: 11px; color: var(--text2); padding: 8px 16px;
@@ -249,6 +218,25 @@
         .empty-watchlist {
             padding: 30px 16px; text-align: center; color: var(--text2); line-height: 2.2;
         }
+        
+        .fear-greed-card {
+            text-align: center; padding: 20px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; margin-bottom: 12px;
+        }
+        .fear-greed-value {
+            font-size: 42px; font-weight: 900; margin: 10px 0;
+        }
+        .fear-greed-label {
+            font-size: 16px; font-weight: 700;
+        }
+        .liquidation-card {
+            padding: 12px; border-radius: 12px; margin-bottom: 8px;
+            background: var(--card); border: 1px solid var(--border);
+            font-size: 12px;
+        }
+        .liq-long { color: var(--green); }
+        .liq-short { color: var(--red); }
     </style>
 </head>
 <body>
@@ -304,13 +292,17 @@
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
             RSI
         </button>
-        <button class="tab" onclick="switchTab('news')">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>
-            اخبار
+        <button class="tab" onclick="switchTab('funding')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            فاندینگ
         </button>
-        <button class="tab" onclick="switchTab('ai')">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-            AI
+        <button class="tab" onclick="switchTab('liquidation')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            لیکوئید
+        </button>
+        <button class="tab" onclick="switchTab('sentiment')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+            احساسات
         </button>
         <button class="tab" onclick="switchTab('watchlist')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
@@ -323,8 +315,9 @@
     <div class="tab-content active" id="market-tab"><div class="coin-list" id="marketList"><div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div></div></div>
     <div class="tab-content" id="trends-tab"><div class="coin-list" id="trendsList"><div class="empty">در حال بارگذاری ترندها...</div></div></div>
     <div class="tab-content" id="rsi-tab"><div class="coin-list" id="rsiList"><div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div></div></div>
-    <div class="tab-content" id="news-tab"><div class="coin-list" id="newsList"><div class="loading"><div class="spinner"></div>در حال دریافت اخبار...</div></div></div>
-    <div class="tab-content" id="ai-tab"><div class="coin-list" id="aiList"><div class="ai-card"><div class="section-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>AI - دستیار هوشمند کریپتو</div><div class="ai-input-group"><input type="text" id="aiInput" placeholder="💬 سوال خود را بپرسید..."><button onclick="askAI()">📨 بپرس</button></div><div id="aiAnswers"></div></div></div></div>
+    <div class="tab-content" id="funding-tab"><div class="coin-list" id="fundingList"><div class="loading"><div class="spinner"></div>در حال دریافت نرخ فاندینگ...</div></div></div>
+    <div class="tab-content" id="liquidation-tab"><div class="coin-list" id="liquidationList"><div class="loading"><div class="spinner"></div>در حال دریافت لیکوئید شدن‌ها...</div></div></div>
+    <div class="tab-content" id="sentiment-tab"><div class="coin-list" id="sentimentList"><div class="loading"><div class="spinner"></div>در حال دریافت احساسات بازار...</div></div></div>
     <div class="tab-content" id="watchlist-tab"><div class="coin-list" id="watchlistList"><div class="empty-watchlist"><svg width="40" height="40" viewBox="0 0 24 24" fill="var(--text2)" opacity="0.3"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><br>هنوز ارزی اضافه نکردی!<br><small>از تب بازار روی ⭐ کلیک کن</small></div></div></div>
 
 <script>
@@ -332,6 +325,7 @@
     if (tg) { tg.ready(); tg.expand(); }
     
     const API_URL = 'https://digitalcity-market.onrender.com/api';
+    const COINGLASS_KEY = '78f5b363862c4d418c0e67b487f88516';
     
     function toggleMenu() { document.getElementById('sideMenu').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
     function closeMenu() { document.getElementById('sideMenu').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
@@ -350,8 +344,9 @@
         if (tab === 'market') { document.getElementById('searchInput').value = ''; if (marketData.length === 0) fetchAllCoins(); else { renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false); document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز لود شده`; } }
         if (tab === 'trends') loadTrendsTab();
         if (tab === 'rsi') loadRSITab();
-        if (tab === 'news') loadNewsTab();
-        if (tab === 'ai') document.getElementById('resultsCount').innerHTML = '🤖 AI - سوال بپرسید';
+        if (tab === 'funding') loadFundingTab();
+        if (tab === 'liquidation') loadLiquidationTab();
+        if (tab === 'sentiment') loadSentimentTab();
         if (tab === 'watchlist') loadWatchlist();
     }
     
@@ -488,56 +483,84 @@
         else { container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`; document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`; }
     }
     
-    async function loadNewsTab() {
-        const container = document.getElementById('newsList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت اخبار کریپتو...</div>';
-        document.getElementById('resultsCount').innerHTML = '📰 در حال دریافت اخبار...';
+    async function loadFundingTab() {
+        const container = document.getElementById('fundingList');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت نرخ فاندینگ...</div>';
         try {
-            const res = await fetch(`${API_URL}/news`);
+            const res = await fetch('https://open-api.coinglass.com/public/v2/funding_rates');
             const data = await res.json();
-            if (!data.rss) { container.innerHTML = '<div class="empty">❌ خبری پیدا نشد</div>'; return; }
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data.rss, 'text/xml');
-            const items = xml.querySelectorAll('item');
-            if (items.length === 0) { container.innerHTML = '<div class="empty">❌ خبری پیدا نشد</div>'; return; }
-            let html = '', count = 0;
-            for (const item of items) {
-                if (count >= 10) break;
-                const title = item.querySelector('title')?.textContent?.split(' - ')[0] || '';
-                const link = item.querySelector('link')?.textContent || '#';
-                const pubDate = item.querySelector('pubDate')?.textContent || '';
-                const source = item.querySelector('source')?.textContent || 'Google News';
-                if (title) {
-                    html += `<div class="news-card"><div class="news-title"><a href="${link}" target="_blank">${title}</a></div><div class="news-meta"><span><span class="news-source">📰 ${source}</span></span><span>${pubDate ? timeAgoText(new Date(pubDate)) : ''}</span></div></div>`;
-                    count++;
-                }
+            if (data?.data && data.data.length > 0) {
+                let html = '';
+                data.data.slice(0, 30).forEach(item => {
+                    const symbol = item.symbol || '';
+                    const fundingRate = item.uMarginList?.[0]?.rate || item.rate || 0;
+                    const rateClass = fundingRate >= 0 ? 'up' : 'down';
+                    html += `<div class="derivatives-card"><div class="derivatives-title">${symbol}</div><div class="derivatives-row"><span class="derivatives-label">نرخ فاندینگ</span><span class="derivatives-value ${rateClass}">${(fundingRate * 100).toFixed(4)}%</span></div></div>`;
+                });
+                container.innerHTML = html || '<div class="empty">❌ داده‌ای پیدا نشد</div>';
+                document.getElementById('resultsCount').innerHTML = '💰 نرخ فاندینگ ۳۰ ارز برتر';
+            } else {
+                container.innerHTML = '<div class="empty">❌ خطا در دریافت داده‌ها</div>';
             }
-            container.innerHTML = html || '<div class="empty">❌ خبری پیدا نشد</div>';
-            document.getElementById('resultsCount').innerHTML = `📰 ${count} خبر کریپتو`;
-        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت اخبار</div>'; }
+        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت نرخ فاندینگ</div>'; }
     }
     
-    async function askAI() {
-        const input = document.getElementById('aiInput'), question = input.value.trim();
-        if (!question) return;
-        const answersDiv = document.getElementById('aiAnswers');
-        answersDiv.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت پاسخ...</div>';
-        
+    async function loadLiquidationTab() {
+        const container = document.getElementById('liquidationList');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت لیکوئید شدن‌ها...</div>';
         try {
-            const res = await fetch(`${API_URL}/ask-ai`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: question })
-            });
-            
+            const res = await fetch('https://open-api.coinglass.com/public/v2/liquidation/info?time_type=h1');
             const data = await res.json();
-            const answer = data?.answer || '⚠️ خطا در دریافت پاسخ';
-            
-            answersDiv.innerHTML = `<div class="ai-card"><div class="ai-question">💬 ${question}</div><div class="ai-answer">${answer}</div></div>${answersDiv.innerHTML}`;
-            input.value = '';
-        } catch(e) {
-            answersDiv.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور</div>';
-        }
+            if (data?.data) {
+                let html = '<div class="section-title">🔥 لیکوئید شدن‌های ۱ ساعت اخیر</div>';
+                const d = data.data;
+                const total = d.total || {};
+                html += `<div class="derivatives-card"><div class="derivatives-title">کل بازار</div><div class="derivatives-row"><span class="derivatives-label">لیکوئید لانگ</span><span class="derivatives-value liq-long">$${formatVolume(total.long || 0)}</span></div><div class="derivatives-row"><span class="derivatives-label">لیکوئید شورت</span><span class="derivatives-value liq-short">$${formatVolume(total.short || 0)}</span></div></div>`;
+                if (d.symbols && d.symbols.length > 0) {
+                    d.symbols.slice(0, 20).forEach(s => {
+                        const longLiq = s.total?.long || 0;
+                        const shortLiq = s.total?.short || 0;
+                        html += `<div class="liquidation-card"><strong>${s.symbol || ''}</strong><br><span class="liq-long">لانگ: $${formatVolume(longLiq)}</span> | <span class="liq-short">شورت: $${formatVolume(shortLiq)}</span></div>`;
+                    });
+                }
+                container.innerHTML = html;
+                document.getElementById('resultsCount').innerHTML = '🔥 لیکوئید شدن‌های اخیر';
+            } else {
+                container.innerHTML = '<div class="empty">❌ داده‌ای پیدا نشد</div>';
+            }
+        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>'; }
+    }
+    
+    async function loadSentimentTab() {
+        const container = document.getElementById('sentimentList');
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت احساسات بازار...</div>';
+        try {
+            const res = await fetch('https://open-api.coinglass.com/public/v2/fear_greed');
+            const data = await res.json();
+            if (data?.data) {
+                const d = data.data[0] || data.data;
+                const value = d.value || 50;
+                const label = d.label || 'خنثی';
+                const color = value >= 60 ? 'var(--green)' : value <= 40 ? 'var(--red)' : 'var(--gold)';
+                let html = `<div class="fear-greed-card"><div class="fear-greed-label">شاخص ترس و طمع</div><div class="fear-greed-value" style="color:${color}">${value}</div><div class="fear-greed-label">${label}</div></div>`;
+                
+                const lsRes = await fetch('https://open-api.coinglass.com/public/v2/long_short_ratio');
+                const lsData = await lsRes.json();
+                if (lsData?.data && lsData.data.length > 0) {
+                    html += '<div class="section-title">📊 نسبت لانگ به شورت</div>';
+                    lsData.data.slice(0, 20).forEach(item => {
+                        const symbol = item.symbol || '';
+                        const ratio = item.longRate || item.long_short_ratio || 0;
+                        const longPct = ratio >= 1 ? (ratio / (1 + ratio) * 100).toFixed(1) : 'N/A';
+                        html += `<div class="derivatives-card"><div class="derivatives-title">${symbol}</div><div class="derivatives-row"><span class="derivatives-label">نسبت L/S</span><span class="derivatives-value">${Number(ratio).toFixed(2)}</span></div></div>`;
+                    });
+                }
+                container.innerHTML = html;
+                document.getElementById('resultsCount').innerHTML = '🎯 احساسات بازار';
+            } else {
+                container.innerHTML = '<div class="empty">❌ داده‌ای پیدا نشد</div>';
+            }
+        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>'; }
     }
     
     function timeAgoText(date) {
