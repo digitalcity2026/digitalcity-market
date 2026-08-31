@@ -33,11 +33,20 @@ async def get_prices():
     except:
         return []
 
-# ========== Open Interest از Bybit ==========
+# ========== Open Interest از Bybit (v5) ==========
 @app.get("/api/coinglass/open-interest")
 async def get_open_interest():
     try:
         async with httpx.AsyncClient() as client:
+            # گرفتن OI از Bybit v5
+            oi_res = await client.get(
+                "https://api.bybit.com/v5/market/open-interest",
+                params={"category": "linear", "limit": "50"},
+                timeout=10.0
+            )
+            oi_data = oi_res.json()
+            
+            # گرفتن تیکرها
             tickers_res = await client.get(
                 "https://api.bybit.com/v5/market/tickers",
                 params={"category": "linear", "limit": 50},
@@ -45,23 +54,29 @@ async def get_open_interest():
             )
             tickers_data = tickers_res.json()
             
+            tickers_map = {}
             if isinstance(tickers_data, dict) and tickers_data.get("result", {}).get("list"):
-                tickers = tickers_data["result"]["list"]
-                
-                result = []
-                for t in tickers[:50]:
-                    symbol = t.get("symbol", "")
+                for t in tickers_data["result"]["list"]:
+                    tickers_map[t.get("symbol", "")] = t
+            
+            result = []
+            
+            if isinstance(oi_data, dict) and oi_data.get("result", {}).get("list"):
+                oi_list = oi_data["result"]["list"]
+                for item in oi_list[:50]:
+                    symbol = item.get("symbol", "")
+                    oi_value = float(item.get("openInterest", 0) or 0)
                     
-                    last_price = float(t.get("lastPrice", 0) or 0)
-                    prev_24h = float(t.get("prevPrice24h", 0) or 0)
+                    ticker = tickers_map.get(symbol, {})
+                    last_price = float(ticker.get("lastPrice", 0) or 0)
+                    prev_24h = float(ticker.get("prevPrice24h", 0) or 0)
                     
-                    if prev_24h > 0:
+                    if prev_24h > 0 and last_price > 0:
                         change_pct = ((last_price - prev_24h) / prev_24h) * 100
                     else:
                         change_pct = 0
                     
-                    vol_24h = float(t.get("turnover24h", 0) or 0)
-                    oi_usd = float(t.get("openInterestValue", vol_24h * 0.1) or 0)
+                    oi_usd = oi_value * last_price
                     
                     if change_pct > 0:
                         direction = "ورود پول"
@@ -72,20 +87,51 @@ async def get_open_interest():
                     
                     result.append({
                         "symbol": symbol,
-                        "openInterest": oi_usd,
+                        "openInterest": oi_value,
                         "openInterestUsd": oi_usd,
                         "change_pct": change_pct,
                         "direction": direction
                     })
-                
+            else:
+                # Fallback: استفاده از ticker ها
+                if tickers_map:
+                    for symbol, t in list(tickers_map.items())[:30]:
+                        last_price = float(t.get("lastPrice", 0) or 0)
+                        prev_24h = float(t.get("prevPrice24h", 0) or 0)
+                        vol_24h = float(t.get("turnover24h", 0) or 0)
+                        
+                        if prev_24h > 0 and last_price > 0:
+                            change_pct = ((last_price - prev_24h) / prev_24h) * 100
+                        else:
+                            change_pct = 0
+                        
+                        oi_usd = vol_24h * 0.1
+                        
+                        if change_pct > 0:
+                            direction = "ورود پول"
+                        elif change_pct < 0:
+                            direction = "خروج پول"
+                        else:
+                            direction = "خنثی"
+                        
+                        result.append({
+                            "symbol": symbol,
+                            "openInterest": oi_usd,
+                            "openInterestUsd": oi_usd,
+                            "change_pct": change_pct,
+                            "direction": direction
+                        })
+            
+            if result:
                 result.sort(key=lambda x: x.get("openInterestUsd", 0), reverse=True)
                 return {"data": result[:30], "source": "bybit"}
+            
     except Exception as e:
         pass
     
     return {"error": "Open Interest در دسترس نیست", "data": []}
 
-# ========== Liquidation از OKX (مثل قبل) ==========
+# ========== Liquidation از OKX ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
