@@ -33,12 +33,11 @@ async def get_prices():
     except:
         return []
 
-# ========== Open Interest از OKX (با تحلیل جریان پول) ==========
+# ========== Open Interest از OKX (تحلیل جریان پول) ==========
 @app.get("/api/coinglass/open-interest")
 async def get_open_interest():
     try:
         async with httpx.AsyncClient() as client:
-            # گرفتن تیکرها برای قیمت و تغییرات
             tickers_res = await client.get(
                 "https://www.okx.com/api/v5/market/tickers",
                 params={"instType": "SWAP", "limit": "50"},
@@ -46,7 +45,6 @@ async def get_open_interest():
             )
             tickers_data = tickers_res.json()
             
-            # گرفتن Open Interest
             oi_res = await client.get(
                 "https://www.okx.com/api/v5/public/open-interest",
                 params={"instType": "SWAP", "limit": "50"},
@@ -64,14 +62,13 @@ async def get_open_interest():
                     oi_value = float(item.get("oi", 0) or 0)
                     oi_usd = float(item.get("oiCcy", 0) or 0)
                     
-                    # گرفتن تغییر قیمت از ticker
                     ticker = tickers.get(symbol, {})
                     change_pct = float(ticker.get("priceChangePercent24h", 0) or 0)
                     
-                    # تحلیل جهت
-                    if change_pct > 0.5:
+                    # تحلیل جهت - هر تغییری
+                    if change_pct > 0:
                         direction = "ورود پول"
-                    elif change_pct < -0.5:
+                    elif change_pct < 0:
                         direction = "خروج پول"
                     else:
                         direction = "خنثی"
