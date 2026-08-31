@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import os
+import json
 
 app = FastAPI()
 
@@ -11,6 +12,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY", "")
 
 @app.get("/")
 def root():
@@ -32,11 +35,58 @@ async def get_prices():
     except:
         return []
 
-# ========== CoinGlass - نسخه ساده ==========
-COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY", "")
-
+# ========== CoinGlass v1 Endpoints ==========
 @app.get("/api/coinglass/funding")
 async def get_funding():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://open-api.coinglass.com/public/v1/funding_rates_oi",
+                headers={"CG-API-KEY": COINGLASS_API_KEY},
+                timeout=10.0
+            )
+            data = response.json()
+            if "data" in data and data["data"]:
+                return data
+            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/coinglass/liquidation")
+async def get_liquidation():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://open-api.coinglass.com/public/v1/liquidation/history?time_type=h1",
+                headers={"CG-API-KEY": COINGLASS_API_KEY},
+                timeout=10.0
+            )
+            data = response.json()
+            if "data" in data and data["data"]:
+                return data
+            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/coinglass/sentiment")
+async def get_sentiment():
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://open-api.coinglass.com/public/v1/fear_greed_index",
+                headers={"CG-API-KEY": COINGLASS_API_KEY},
+                timeout=10.0
+            )
+            data = response.json()
+            if "data" in data and data["data"]:
+                return data
+            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
+    except Exception as e:
+        return {"error": str(e)}
+
+# ========== CoinGlass v2 Fallback ==========
+@app.get("/api/coinglass/funding-v2")
+async def get_funding_v2():
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -45,16 +95,14 @@ async def get_funding():
                 timeout=10.0
             )
             data = response.json()
-            # چک کن خطا نداشته باشه
             if "data" in data and data["data"]:
                 return data
-            else:
-                return {"error": data.get("msg", "No data")}
+            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/api/coinglass/liquidation")
-async def get_liquidation():
+@app.get("/api/coinglass/liquidation-v2")
+async def get_liquidation_v2():
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -65,13 +113,12 @@ async def get_liquidation():
             data = response.json()
             if "data" in data and data["data"]:
                 return data
-            else:
-                return {"error": data.get("msg", "No data")}
+            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/api/coinglass/sentiment")
-async def get_sentiment():
+@app.get("/api/coinglass/sentiment-v2")
+async def get_sentiment_v2():
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -82,15 +129,13 @@ async def get_sentiment():
             data = response.json()
             if "data" in data and data["data"]:
                 return data
-            else:
-                return {"error": data.get("msg", "No data")}
+            return {"error": data.get("msg", "No data"), "raw": str(data)[:300]}
     except Exception as e:
         return {"error": str(e)}
 
 # ========== Watchlist ==========
 @app.get("/api/watchlist/{user_id}")
 async def get_watchlist(user_id: str):
-    import json
     data_file = "data.json"
     if not os.path.exists(data_file):
         return {"watchlist": []}
@@ -100,14 +145,15 @@ async def get_watchlist(user_id: str):
 
 @app.post("/api/watchlist/{user_id}")
 async def add_to_watchlist(user_id: str, coin: dict):
-    import json
     data_file = "data.json"
     if not os.path.exists(data_file):
         data = {"watchlists": {}}
     else:
         with open(data_file, 'r') as f:
             data = json.load(f)
-    if user_id not in data.get("watchlists", {}):
+    if "watchlists" not in data:
+        data["watchlists"] = {}
+    if user_id not in data["watchlists"]:
         data["watchlists"][user_id] = []
     if not any(c["id"] == coin["id"] for c in data["watchlists"][user_id]):
         data["watchlists"][user_id].append(coin)
@@ -117,7 +163,6 @@ async def add_to_watchlist(user_id: str, coin: dict):
 
 @app.delete("/api/watchlist/{user_id}/{coin_id}")
 async def remove_from_watchlist(user_id: str, coin_id: str):
-    import json
     data_file = "data.json"
     if os.path.exists(data_file):
         with open(data_file, 'r') as f:
