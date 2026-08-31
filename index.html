@@ -116,7 +116,6 @@
             justify-content: center; gap: 2px; white-space: nowrap;
         }
         .tab.active { background: var(--glass); border-color: var(--purple); color: var(--purple); font-weight: 700; }
-        .tab svg { flex-shrink: 0; width: 10px; height: 10px; }
         
         .coin-list { padding: 20px 16px 20px; position: relative; z-index: 1; }
         .coin-card {
@@ -471,14 +470,14 @@
                 let html = '';
                 data.data.slice(0, 30).forEach(item => {
                     const symbol = item.symbol || '';
-                    const fundingRate = item.uMarginList?.[0]?.rate || item.rate || 0;
+                    const fundingRate = parseFloat(item.lastFundingRate || 0);
                     const rateClass = fundingRate >= 0 ? 'up' : 'down';
                     html += `<div class="derivatives-card"><div class="derivatives-title">${symbol}</div><div class="derivatives-row"><span class="derivatives-label">نرخ فاندینگ</span><span class="derivatives-value ${rateClass}">${(fundingRate * 100).toFixed(4)}%</span></div></div>`;
                 });
                 container.innerHTML = html || '<div class="empty">❌ داده‌ای پیدا نشد</div>';
-                document.getElementById('resultsCount').innerHTML = '💰 نرخ فاندینگ ۳۰ ارز برتر';
+                document.getElementById('resultsCount').innerHTML = '💰 نرخ فاندینگ (Binance Futures)';
             } else {
-                container.innerHTML = '<div class="empty">❌ خطا در دریافت داده‌ها</div>';
+                container.innerHTML = `<div class="empty">❌ ${data?.error || 'خطا در دریافت داده‌ها'}</div>`;
             }
         } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت نرخ فاندینگ</div>'; }
     }
@@ -490,7 +489,7 @@
             const res = await fetch(`${API_URL}/coinglass/liquidation`);
             const data = await res.json();
             if (data?.data) {
-                let html = '<div class="section-title">🔥 لیکوئید شدن‌های ۱ ساعت اخیر</div>';
+                let html = '<div class="section-title">🔥 لیکوئید شدن‌های اخیر (Binance)</div>';
                 const d = data.data;
                 const total = d.total || {};
                 html += `<div class="derivatives-card"><div class="derivatives-title">کل بازار</div><div class="derivatives-row"><span class="derivatives-label">لیکوئید لانگ</span><span class="derivatives-value liq-long">$${formatVolume(total.long || 0)}</span></div><div class="derivatives-row"><span class="derivatives-label">لیکوئید شورت</span><span class="derivatives-value liq-short">$${formatVolume(total.short || 0)}</span></div></div>`;
@@ -504,7 +503,7 @@
                 container.innerHTML = html;
                 document.getElementById('resultsCount').innerHTML = '🔥 لیکوئید شدن‌های اخیر';
             } else {
-                container.innerHTML = '<div class="empty">❌ داده‌ای پیدا نشد</div>';
+                container.innerHTML = `<div class="empty">❌ ${data?.error || 'داده‌ای پیدا نشد'}</div>`;
             }
         } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>'; }
     }
@@ -515,8 +514,8 @@
         try {
             const res = await fetch(`${API_URL}/coinglass/sentiment`);
             const data = await res.json();
-            if (data?.data) {
-                const d = data.data[0] || data.data;
+            if (data?.data && data.data.length > 0) {
+                const d = data.data[0];
                 const value = d.value || 50;
                 const label = d.label || 'خنثی';
                 const color = value >= 60 ? 'var(--green)' : value <= 40 ? 'var(--red)' : 'var(--gold)';
@@ -524,7 +523,7 @@
                 container.innerHTML = html;
                 document.getElementById('resultsCount').innerHTML = '🎯 احساسات بازار';
             } else {
-                container.innerHTML = '<div class="empty">❌ داده‌ای پیدا نشد</div>';
+                container.innerHTML = `<div class="empty">❌ ${data?.error || 'داده‌ای پیدا نشد'}</div>`;
             }
         } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>'; }
     }
