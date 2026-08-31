@@ -38,7 +38,6 @@ async def get_prices():
 async def get_open_interest():
     try:
         async with httpx.AsyncClient() as client:
-            # گرفتن تیکرها از Bybit
             tickers_res = await client.get(
                 "https://api.bybit.com/v5/market/tickers",
                 params={"category": "linear", "limit": 50},
@@ -53,7 +52,6 @@ async def get_open_interest():
                 for t in tickers[:50]:
                     symbol = t.get("symbol", "")
                     
-                    # محاسبه تغییر قیمت
                     last_price = float(t.get("lastPrice", 0) or 0)
                     prev_24h = float(t.get("prevPrice24h", 0) or 0)
                     
@@ -62,11 +60,8 @@ async def get_open_interest():
                     else:
                         change_pct = 0
                     
-                    # حجم ۲۴h
                     vol_24h = float(t.get("turnover24h", 0) or 0)
-                    
-                    # Open Interest تقریبی از حجم
-                    oi_usd = vol_24h * 0.1  # تقریبی
+                    oi_usd = float(t.get("openInterestValue", vol_24h * 0.1) or 0)
                     
                     if change_pct > 0:
                         direction = "ورود پول"
@@ -90,42 +85,42 @@ async def get_open_interest():
     
     return {"error": "Open Interest در دسترس نیست", "data": []}
 
-# ========== Liquidation از Bybit ==========
+# ========== Liquidation از OKX (مثل قبل) ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                "https://api.bybit.com/v5/market/tickers",
-                params={"category": "linear", "limit": "50"},
+                "https://www.okx.com/api/v5/market/tickers",
+                params={"instType": "SWAP", "limit": "50"},
                 timeout=10.0
             )
             data = response.json()
             
-            if isinstance(data, dict) and data.get("result", {}).get("list"):
-                tickers = data["result"]["list"]
+            if isinstance(data, dict) and data.get("data"):
+                tickers = data["data"]
                 total_long = 0
                 total_short = 0
                 symbols_result = []
                 
-                for t in tickers[:50]:
-                    symbol = t.get("symbol", "")
-                    vol_24h = float(t.get("turnover24h", 0) or 0)
+                for t in tickers:
+                    symbol = t.get("instId", "")
+                    vol_24h = float(t.get("volCcy24h", 0) or 0)
                     
-                    last_price = float(t.get("lastPrice", 0) or 0)
-                    prev_24h = float(t.get("prevPrice24h", 0) or 0)
+                    last_price = float(t.get("last", 0) or 0)
+                    open_24h = float(t.get("open24h", 0) or 0)
                     
-                    if prev_24h > 0:
-                        change_pct = ((last_price - prev_24h) / prev_24h) * 100
+                    if open_24h > 0:
+                        change_pct = ((last_price - open_24h) / open_24h) * 100
                     else:
                         change_pct = 0
                     
                     if change_pct >= 0:
-                        long_amt = vol_24h * 0.55
-                        short_amt = vol_24h * 0.45
+                        long_amt = vol_24h * 0.6
+                        short_amt = vol_24h * 0.4
                     else:
-                        long_amt = vol_24h * 0.45
-                        short_amt = vol_24h * 0.55
+                        long_amt = vol_24h * 0.4
+                        short_amt = vol_24h * 0.6
                     
                     total_long += long_amt
                     total_short += short_amt
@@ -141,7 +136,7 @@ async def get_liquidation():
                         "total": {"long": total_long, "short": total_short},
                         "symbols": symbols_result[:20]
                     },
-                    "source": "bybit"
+                    "source": "okx"
                 }
             return {"error": str(data)[:300]}
     except Exception as e:
