@@ -33,52 +33,62 @@ async def get_prices():
     except:
         return []
 
-# ========== Funding Rate از Bybit ==========
+# ========== Funding Rate از KCEx ==========
 @app.get("/api/coinglass/funding")
 async def get_funding():
     try:
         async with httpx.AsyncClient() as client:
-            # گرفتن tickers از Bybit
+            # KCEx API - گرفتن تیکرهای فیوچرز
             response = await client.get(
-                "https://api.bybit.com/v5/market/tickers",
-                params={"category": "linear", "limit": 100},
+                "https://api.kcex.com/api/v1/tickers",
                 timeout=10.0
             )
             data = response.json()
             
-            if isinstance(data, dict) and data.get("result", {}).get("list"):
-                tickers = data["result"]["list"]
-                filtered = []
+            if isinstance(data, dict) and data.get("data"):
+                tickers = data["data"]
+                result = []
                 for t in tickers:
                     symbol = t.get("symbol", "")
-                    funding_rate = float(t.get("fundingRate", 0) or 0)
-                    filtered.append({
+                    funding_rate = float(t.get("fundingRate", t.get("funding_rate", 0)) or 0)
+                    result.append({
                         "symbol": symbol,
                         "lastFundingRate": funding_rate
                     })
                 
-                # مرتب‌سازی
-                filtered.sort(key=lambda x: x["lastFundingRate"], reverse=True)
-                return {"data": filtered[:50]}
+                result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
+                return {"data": result[:50]}
+            elif isinstance(data, list):
+                result = []
+                for t in data:
+                    symbol = t.get("symbol", "")
+                    funding_rate = float(t.get("fundingRate", t.get("funding_rate", 0)) or 0)
+                    result.append({
+                        "symbol": symbol,
+                        "lastFundingRate": funding_rate
+                    })
+                result.sort(key=lambda x: x["lastFundingRate"], reverse=True)
+                return {"data": result[:50]}
             else:
-                return {"error": str(data)[:300]}
+                return {"error": str(data)[:500]}
     except Exception as e:
         return {"error": str(e)}
 
-# ========== Liquidation از Binance (با fallback) ==========
+# ========== Liquidation از KCEx ==========
 @app.get("/api/coinglass/liquidation")
 async def get_liquidation():
     try:
-        # تلاش از Binance اول
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    "https://fapi.binance.com/fapi/v1/allForceOrders?limit=100",
-                    timeout=5.0
-                )
-                orders = response.json()
-                
-                if isinstance(orders, list) and len(orders) > 0:
+        async with httpx.AsyncClient() as client:
+            # KCEx liquidation orders
+            response = await client.get(
+                "https://api.kcex.com/api/v1/liquidation",
+                timeout=10.0
+            )
+            data = response.json()
+            
+            if isinstance(data, dict) and data.get("data"):
+                orders = data["data"]
+                if isinstance(orders, list):
                     long_liq = 0
                     short_liq = 0
                     symbols_liq = {}
@@ -87,20 +97,20 @@ async def get_liquidation():
                         if not isinstance(order, dict):
                             continue
                         try:
-                            price = float(order.get("avgPrice", 0) or 0)
-                            qty = float(order.get("executedQty", order.get("origQty", 0)) or 0)
+                            price = float(order.get("price", order.get("avgPrice", 0)) or 0)
+                            qty = float(order.get("qty", order.get("amount", 0)) or 0)
                             value = price * qty
                             symbol = order.get("symbol", "")
-                            side = order.get("side", "")
+                            side = order.get("side", "").upper()
                             
-                            if side == "SELL":
+                            if side in ("SELL", "SHORT"):
                                 long_liq += value
                             else:
                                 short_liq += value
                             
                             if symbol not in symbols_liq:
                                 symbols_liq[symbol] = {"long": 0, "short": 0}
-                            if side == "SELL":
+                            if side in ("SELL", "SHORT"):
                                 symbols_liq[symbol]["long"] += value
                             else:
                                 symbols_liq[symbol]["short"] += value
@@ -113,21 +123,11 @@ async def get_liquidation():
                             "symbols": [{"symbol": k, "total": v} for k, v in list(symbols_liq.items())[:20]]
                         }
                     }
-        except:
-            pass
-        
-        # Fallback: داده‌های نمونه
-        return {
-            "data": {
-                "total": {"long": 0, "short": 0},
-                "symbols": []
-            },
-            "note": "Binance API از این لوکیشن در دسترس نیست"
-        }
+            return {"error": str(data)[:500]}
     except Exception as e:
         return {"error": str(e)}
 
-# ========== Fear & Greed از alternative.me ==========
+# ========== Fear & Greed ==========
 @app.get("/api/coinglass/sentiment")
 async def get_sentiment():
     try:
