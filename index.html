@@ -2,581 +2,562 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DigitalCity Market</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0f;
-            --card: rgba(255,255,255,0.03);
-            --border: rgba(255,255,255,0.06);
-            --purple: #8b5cf6;
-            --blue: #3b82f6;
+            --bg-deep: #030712;
+            --bg-navy: #071126;
+            --card: rgba(14, 28, 58, 0.55);
+            --card-hover: rgba(20, 42, 84, 0.75);
+            --border: rgba(56, 189, 248, 0.14);
+            --blue-primary: #0072ff;
+            --blue-light: #00c6ff;
+            --blue-glow: rgba(0, 140, 255, 0.22);
             --green: #10b981;
             --red: #ef4444;
             --gold: #f59e0b;
-            --text: #f1f5f9;
+            --text: #f8fafc;
             --text2: #94a3b8;
-            --glass: rgba(139,92,246,0.08);
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             font-family: 'Vazirmatn', sans-serif;
-            background: var(--bg);
+            background-color: var(--bg-deep);
             color: var(--text);
             min-height: 100vh;
             background-image: 
-                radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.12) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(59,130,246,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.04) 0%, transparent 70%);
+                radial-gradient(circle at 15% 5%, rgba(0, 114, 255, 0.22) 0%, transparent 45%),
+                radial-gradient(circle at 85% 30%, rgba(0, 198, 255, 0.14) 0%, transparent 50%),
+                linear-gradient(180deg, #040917 0%, #07132c 50%, #030712 100%);
+            background-attachment: fixed;
         }
         
+        /* هدر برنامه */
         .header {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border); padding: 10px 16px;
+            background: rgba(4, 10, 24, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
             display: flex; align-items: center; justify-content: space-between;
         }
-        .header-logo { display: flex; align-items: center; gap: 8px; }
+        .header-logo { display: flex; align-items: center; gap: 10px; }
         .header-logo img {
-            width: 34px; height: 34px; border-radius: 50%;
-            border: 2px solid var(--purple); box-shadow: 0 0 15px rgba(139,92,246,0.3);
+            width: 38px; height: 38px; border-radius: 10px;
+            background: #fff; padding: 2px;
+            border: 1.5px solid var(--blue-light);
+            box-shadow: 0 0 16px rgba(0, 198, 255, 0.35);
+            object-fit: contain;
         }
         .header-title {
-            font-size: 15px; font-weight: 900;
-            background: linear-gradient(135deg, var(--purple), var(--blue));
+            font-size: 16px; font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, var(--blue-light) 50%, var(--blue-primary) 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 0.3px;
         }
         
         .hamburger {
-            width: 34px; height: 34px; background: var(--card);
+            width: 36px; height: 36px; background: var(--card);
             border: 1px solid var(--border); border-radius: 10px;
             cursor: pointer; display: flex; flex-direction: column;
             align-items: center; justify-content: center; gap: 4px;
         }
-        .hamburger span { display: block; width: 15px; height: 2px; background: var(--text); border-radius: 2px; }
+        .hamburger span { display: block; width: 16px; height: 2px; background: var(--blue-light); border-radius: 2px; }
         
+        /* منوی کشویی */
         .side-menu {
             position: fixed; top: 0; right: -320px; width: 280px; height: 100%;
-            background: rgba(15,15,25,0.98); backdrop-filter: blur(30px);
+            background: linear-gradient(180deg, rgba(6, 15, 36, 0.98) 0%, rgba(3, 8, 20, 0.99) 100%);
+            backdrop-filter: blur(30px);
             border-left: 1px solid var(--border); z-index: 200;
-            transition: right 0.4s; padding: 24px 18px; display: flex; flex-direction: column;
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 26px 18px; display: flex; flex-direction: column;
         }
         .side-menu.active { right: 0; }
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 150;
+            background: rgba(0, 4, 12, 0.7); z-index: 150;
             opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
         .overlay.active { opacity: 1; pointer-events: all; }
         
         .menu-header { text-align: center; margin-bottom: 24px; }
-        .menu-header img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--purple); }
-        .menu-header h3 { margin-top: 8px; font-size: 16px; font-weight: 900; }
-        .menu-links { display: flex; flex-direction: column; gap: 6px; }
+        .menu-header img {
+            width: 60px; height: 60px; border-radius: 16px;
+            background: #fff; padding: 3px;
+            border: 2px solid var(--blue-light);
+            box-shadow: 0 0 20px rgba(0, 198, 255, 0.3);
+        }
+        .menu-header h3 { margin-top: 10px; font-size: 16px; font-weight: 900; color: #fff; }
+        .menu-header p { font-size: 11px; color: var(--blue-light); margin-top: 2px; }
+        .menu-links { display: flex; flex-direction: column; gap: 8px; }
         .menu-link {
             display: flex; align-items: center; gap: 12px;
             padding: 12px 14px; border-radius: 12px;
             background: var(--card); border: 1px solid var(--border);
             color: var(--text); text-decoration: none;
-            font-size: 13px; font-weight: 500;
+            font-size: 13px; font-weight: 600; transition: all 0.2s;
         }
-        .menu-link:active { background: var(--glass); border-color: var(--purple); }
-        .menu-footer { margin-top: auto; text-align: center; color: var(--text2); font-size: 10px; }
+        .menu-link:active { background: var(--blue-glow); border-color: var(--blue-light); transform: scale(0.98); }
+        .menu-footer { margin-top: auto; text-align: center; color: var(--text2); font-size: 11px; }
         
+        /* باکس جستجو */
         .search-container {
-            position: sticky; top: 55px; z-index: 50;
-            padding: 10px 16px; background: rgba(10,10,15,0.85);
-            backdrop-filter: blur(10px);
+            padding: 10px 16px 6px;
+            background: rgba(4, 10, 24, 0.75);
+            backdrop-filter: blur(12px);
         }
         .search-box {
             width: 100%; padding: 12px 16px; border-radius: 14px;
             background: var(--card); border: 1px solid var(--border);
             color: var(--text); font-family: 'Vazirmatn', sans-serif;
-            font-size: 14px; outline: none;
+            font-size: 13px; outline: none; transition: border 0.25s;
         }
-        .search-box:focus { border-color: var(--purple); }
+        .search-box:focus { border-color: var(--blue-light); box-shadow: 0 0 12px rgba(0, 198, 255, 0.2); }
         .search-box::placeholder { color: var(--text2); }
         
+        /* تب‌های دارای ایموجی متحرک */
         .tabs {
-            display: flex; gap: 5px; padding: 10px 12px;
-            position: sticky; top: 55px; z-index: 50;
-            background: rgba(10,10,15,0.85); backdrop-filter: blur(10px);
-            flex-wrap: wrap;
+            display: flex; gap: 6px; padding: 10px 12px;
+            position: sticky; top: 58px; z-index: 50;
+            background: rgba(4, 10, 24, 0.88);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto; scrollbar-width: none;
         }
+        .tabs::-webkit-scrollbar { display: none; }
         .tab {
-            flex: 1; min-width: 45px; padding: 8px 3px; border-radius: 10px;
+            flex: 1; min-width: 64px; padding: 8px 6px; border-radius: 12px;
             border: 1px solid var(--border); background: var(--card);
-            color: var(--text2); font-size: 9px; font-weight: 500;
+            color: var(--text2); font-size: 11px; font-weight: 600;
             cursor: pointer; text-align: center; font-family: 'Vazirmatn', sans-serif;
-            transition: all 0.3s; display: flex; align-items: center;
-            justify-content: center; gap: 2px; white-space: nowrap;
+            transition: all 0.25s; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px; white-space: nowrap;
         }
-        .tab.active { background: var(--glass); border-color: var(--purple); color: var(--purple); font-weight: 700; }
+        .tab img.anim-emoji {
+            width: 22px; height: 22px; object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            transition: transform 0.25s;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, rgba(0, 114, 255, 0.28), rgba(0, 198, 255, 0.18));
+            border-color: var(--blue-light); color: #fff; font-weight: 800;
+            box-shadow: 0 4px 14px rgba(0, 114, 255, 0.25);
+        }
+        .tab.active img.anim-emoji { transform: scale(1.15); }
         
-        .coin-list { padding: 20px 16px 20px; position: relative; z-index: 1; }
+        .results-count {
+            font-size: 11px; color: var(--blue-light); padding: 8px 16px 4px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        /* کارت ارزها */
+        .coin-list { padding: 10px 16px 28px; }
         .coin-card {
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 12px 14px; margin-bottom: 8px;
-            display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-            backdrop-filter: blur(10px); transition: all 0.3s;
+            border-radius: 16px; padding: 12px 14px; margin-bottom: 10px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            backdrop-filter: blur(10px); transition: all 0.2s;
         }
-        .coin-card:active { transform: scale(0.98); border-color: var(--purple); }
+        .coin-card:active { transform: scale(0.98); border-color: var(--blue-light); background: var(--card-hover); }
         
         .coin-rank {
-            width: 26px; height: 26px; border-radius: 7px;
-            background: var(--glass); display: flex; align-items: center;
-            justify-content: center; font-size: 11px; font-weight: 700;
-            color: var(--text2); flex-shrink: 0;
+            width: 26px; height: 26px; border-radius: 8px;
+            background: var(--blue-glow); border: 1px solid rgba(0, 198, 255, 0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: var(--blue-light); flex-shrink: 0;
         }
-        .coin-icon { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; }
-        .coin-info { flex: 1; min-width: 100px; }
-        .coin-name { font-weight: 700; font-size: 13px; }
+        .coin-icon { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+        .coin-info { flex: 1; min-width: 95px; }
+        .coin-name { font-weight: 700; font-size: 13px; color: #fff; }
         .coin-symbol { font-size: 10px; color: var(--text2); }
         .coin-price { text-align: left; flex-shrink: 0; min-width: 90px; }
-        .coin-price .price { font-weight: 900; font-size: 14px; }
-        .coin-price .change { font-size: 11px; font-weight: 500; }
+        .coin-price .price { font-weight: 900; font-size: 14px; color: #fff; }
+        .coin-price .change { font-size: 11px; font-weight: 600; }
         .up { color: var(--green); }
         .down { color: var(--red); }
         
         .coin-volume {
             width: 100%; font-size: 10px; color: var(--text2);
             display: flex; justify-content: space-between;
-            padding-top: 4px; border-top: 1px solid var(--border);
+            padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);
         }
-        
-        .rsi-badge {
-            display: inline-block; padding: 2px 8px; border-radius: 10px;
-            font-size: 10px; font-weight: 700; margin-right: 6px;
-        }
-        .rsi-overbought { background: rgba(239,68,68,0.15); color: var(--red); }
-        .rsi-oversold { background: rgba(16,185,129,0.15); color: var(--green); }
         
         .star-btn {
-            flex-shrink: 0; width: 28px; height: 28px; border-radius: 7px;
-            border: 1px solid var(--border); background: var(--card);
-            cursor: pointer; font-size: 13px; display: flex;
-            align-items: center; justify-content: center;
-            color: var(--text2); margin-right: auto;
+            flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+            cursor: pointer; font-size: 14px; display: flex;
+            align-items: center; justify-content: center; color: var(--text2);
         }
-        .star-btn.starred { color: var(--gold); border-color: var(--gold); background: rgba(245,158,11,0.1); }
+        .star-btn.starred { color: var(--gold); border-color: var(--gold); background: rgba(245,158,11,0.15); }
         
-        .load-more { text-align: center; padding: 20px; }
-        .load-more button {
-            padding: 12px 30px; border-radius: 14px;
-            background: var(--glass); border: 1px solid var(--purple);
-            color: var(--purple); font-family: 'Vazirmatn', sans-serif;
-            font-size: 14px; font-weight: 700; cursor: pointer;
+        /* کارت‌های بازار متفرقه */
+        .misc-grid { display: flex; flex-direction: column; gap: 10px; }
+        .misc-card {
+            background: linear-gradient(135deg, rgba(14, 30, 64, 0.75), rgba(8, 18, 40, 0.85));
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
         }
+        .misc-left { display: flex; align-items: center; gap: 12px; }
+        .misc-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--blue-glow); border: 1px solid rgba(0, 198, 255, 0.3);
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+        }
+        .misc-title { font-weight: 800; font-size: 14px; color: #fff; }
+        .misc-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+        .misc-right { text-align: left; }
+        .misc-price { font-weight: 900; font-size: 15px; color: var(--blue-light); }
         
-        .derivatives-card {
+        /* کارت‌های اخبار */
+        .news-card {
+            display: block; text-decoration: none; color: inherit;
             background: var(--card); border: 1px solid var(--border);
             border-radius: 16px; padding: 14px; margin-bottom: 10px;
-            backdrop-filter: blur(10px);
+            transition: all 0.2s;
         }
-        .derivatives-title {
-            font-weight: 700; font-size: 14px; margin-bottom: 8px;
-            color: var(--purple);
+        .news-card:active { border-color: var(--blue-light); background: var(--card-hover); }
+        .news-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 10px; }
+        .news-badge {
+            padding: 3px 8px; border-radius: 6px; font-weight: 700;
+            background: var(--blue-glow); color: var(--blue-light);
+            border: 1px solid rgba(0, 198, 255, 0.25);
         }
-        .derivatives-row {
-            display: flex; justify-content: space-between;
-            padding: 6px 0; border-bottom: 1px solid var(--border);
-            font-size: 12px;
-        }
-        .derivatives-row:last-child { border-bottom: none; }
-        .derivatives-label { color: var(--text2); }
-        .derivatives-value { font-weight: 700; }
+        .news-title { font-weight: 800; font-size: 13px; line-height: 1.7; color: #fff; margin-bottom: 6px; }
+        .news-summary { font-size: 11px; color: var(--text2); line-height: 1.7; }
         
-        .results-count {
-            font-size: 11px; color: var(--text2); padding: 8px 16px;
-            position: sticky; top: 100px; z-index: 40;
-            background: rgba(10,10,15,0.7); backdrop-filter: blur(10px);
-        }
-        
-        .section-title {
-            font-size: 14px; font-weight: 700; margin: 20px 0 10px;
-            display: flex; align-items: center; gap: 6px;
+        .load-more { text-align: center; padding: 16px; }
+        .load-more button {
+            padding: 11px 28px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--blue-primary), var(--blue-light));
+            border: none; color: #fff; font-family: 'Vazirmatn', sans-serif;
+            font-size: 13px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.35);
         }
         
-        .empty { text-align: center; padding: 40px; color: var(--text2); }
-        .loading { text-align: center; padding: 40px; }
+        .section-title { font-size: 13px; font-weight: 800; margin: 14px 0 10px; color: var(--blue-light); display: flex; align-items: center; gap: 6px; }
+        .empty { text-align: center; padding: 40px 16px; color: var(--text2); font-size: 13px; }
+        .loading { text-align: center; padding: 40px 16px; color: var(--text2); font-size: 13px; }
         .spinner {
             width: 36px; height: 36px; border: 3px solid var(--border);
-            border-top-color: var(--purple); border-radius: 50%;
-            animation: spin 1s linear infinite; margin: 0 auto 14px;
+            border-top-color: var(--blue-light); border-radius: 50%;
+            animation: spin 0.9s linear infinite; margin: 0 auto 14px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .hidden { display: none; }
-        
-        .empty-watchlist {
-            padding: 30px 16px; text-align: center; color: var(--text2); line-height: 2.2;
-        }
-        
-        .fear-greed-card {
-            text-align: center; padding: 20px;
-            background: var(--card); border: 1px solid var(--border);
-            border-radius: 16px; margin-bottom: 12px;
-        }
-        .fear-greed-value {
-            font-size: 42px; font-weight: 900; margin: 10px 0;
-        }
-        .fear-greed-label {
-            font-size: 16px; font-weight: 700;
-        }
-        .liquidation-card {
-            padding: 12px; border-radius: 12px; margin-bottom: 8px;
-            background: var(--card); border: 1px solid var(--border);
-            font-size: 12px;
-        }
-        .liq-long { color: var(--green); }
-        .liq-short { color: var(--red); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
     <div class="overlay" id="overlay" onclick="closeMenu()"></div>
     
+    <!-- منوی همبرگری با آیدی‌های جدید digitalcitycrypto -->
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <img src="https://i.postimg.cc/f3npcsvF/logo.png" alt="DigitalCity">
+            <img src="logo.png" onerror="this.src=DEFAULT_LOGO_SVG" alt="DigitalCity">
             <h3>DigitalCity Market</h3>
+            <p>@digitalcitycrypto</p>
         </div>
         <div class="menu-links">
-            <a href="https://t.me/digitalcity2025" target="_blank" class="menu-link">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0z" fill="#0088cc"/><path d="M5.431 11.873l8.208-3.168c.38-.161.704-.083.483.161l-1.664 1.5-1.177 1.812-.444 3.168c.083 0 .19-.083.273-.161l1.99-1.664 2.493 1.832c.46.253.79.122.904-.425l1.637-7.712c.168-.674-.26-.978-.722-.779L5.43 10.76c-.698.28-.693.668-.127.842l2.112.66 4.884-3.08c.23-.15.442-.07.268.088l-3.946 3.56-.17 2.58-.823-.28z" fill="white"/></svg>
+            <a href="https://t.me/digitalcitycrypto" target="_blank" class="menu-link">
+                <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#0088cc"/><path d="M5.43 11.87l8.21-3.17c.38-.16.7-.08.48.16l-1.66 1.5-1.18 1.81-.44 3.17c.08 0 .19-.08.27-.16l1.99-1.66 2.49 1.83c.46.25.79.12.9-.43l1.64-7.71c.17-.67-.26-.98-.72-.78L5.43 10.76c-.7.28-.69.67-.13.84l2.11.66 4.88-3.08c.23-.15.44-.07.27.09l-3.95 3.56-.17 2.58-.82-.28z" fill="#fff"/></svg>
                 کانال تلگرام
             </a>
-            <a href="https://youtube.com/@digitalcity2024" target="_blank" class="menu-link">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#FF0000"/><path d="M19.615 8.184c-.21-.796-.829-1.423-1.615-1.635C16.577 6.167 12 6.167 12 6.167s-4.577 0-6 .382c-.786.212-1.405.84-1.615 1.635C4 9.547 4 12 4 12s0 2.453.385 3.816c.21.796.829 1.423 1.615 1.635 1.423.382 6 .382 6 .382s4.577 0 6-.382c.786-.212 1.405-.84 1.615-1.635C20 14.453 20 12 20 12s0-2.453-.385-3.816z" fill="white"/><path d="M10.5 15.167l4-3.167-4-3.167v6.334z" fill="#FF0000"/></svg>
+            <a href="https://instagram.com/digitalcitycrypto" target="_blank" class="menu-link">
+                <svg width="22" height="22" viewBox="0 0 24 24"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#f09433"/><stop offset="50%" stop-color="#dc2743"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><rect x="4.5" y="4.5" width="15" height="15" rx="4" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="3.6" stroke="#fff" stroke-width="1.8" fill="none"/><circle cx="16.3" cy="7.7" r="1.1" fill="#fff"/></svg>
+                صفحه اینستاگرام
+            </a>
+            <a href="https://youtube.com/@digitalcitycrypto" target="_blank" class="menu-link">
+                <svg width="22" height="22" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#FF0000"/><path d="M19.6 8.2c-.2-.8-.8-1.4-1.6-1.6C16.6 6.2 12 6.2 12 6.2s-4.6 0-6 .4c-.8.2-1.4.8-1.6 1.6C4 9.5 4 12 4 12s0 2.5.4 3.8c.2.8.8 1.4 1.6 1.6 1.4.4 6 .4 6 .4s4.6 0 6-.4c.8-.2 1.4-.8 1.6-1.6.4-1.3.4-3.8.4-3.8s0-2.5-.4-3.8z" fill="#fff"/><path d="M10.5 15.2l4-3.2-4-3.2v6.4z" fill="#FF0000"/></svg>
                 کانال یوتیوب
             </a>
             <a href="https://coinmarketcap.com/community/profile/a_abbasbeigi/" target="_blank" class="menu-link">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#3861FB"/><path d="M6 8.5L12 3l6 5.5L12 14 6 8.5z" fill="white" opacity="0.7"/><path d="M6 12l6 5.5 6-5.5" stroke="white" stroke-width="1.5" fill="none" opacity="0.9"/><path d="M6 15.5l6 5.5 6-5.5" stroke="white" stroke-width="1.5" fill="none" opacity="0.5"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#3861FB"/><path d="M6 8.5L12 3l6 5.5L12 14 6 8.5z" fill="#fff" opacity="0.8"/><path d="M6 12l6 5.5 6-5.5" stroke="#fff" stroke-width="1.6" fill="none"/></svg>
                 پروفایل CMC
             </a>
         </div>
         <div class="menu-footer">DigitalCity Market © 2026</div>
     </div>
 
+    <!-- هدر اصلی -->
     <div class="header">
         <div class="header-logo">
-            <img src="https://i.postimg.cc/f3npcsvF/logo.png" alt="Logo">
+            <img id="headerLogo" src="logo.png" alt="Logo">
             <span class="header-title">DigitalCity Market</span>
         </div>
-        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <div class="hamburger" onclick="toggleMenu()">
             <span></span><span></span><span></span>
         </div>
     </div>
     
-    <div class="search-container">
-        <input type="text" class="search-box" id="searchInput" placeholder="🔍 جستجوی سریع در ۱۰۰۰ ارز..." oninput="filterCoins()">
+    <!-- جستجو -->
+    <div class="search-container" id="searchContainer">
+        <input type="text" class="search-box" id="searchInput" placeholder="🔍 جستجوی سریع نام یا نماد در ۱۰۰۰ ارز..." oninput="filterCoins()">
     </div>
     
+    <!-- تب‌ها با ایموجی‌های متحرک -->
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('market')">📊 بازار</button>
-        <button class="tab" onclick="switchTab('trends')">🔥 ترندها</button>
-        <button class="tab" onclick="switchTab('rsi')">📈 RSI</button>
-        <button class="tab" onclick="switchTab('oi')">📊 OI</button>
-        <button class="tab" onclick="switchTab('liquidation')">💥 لیکوئید</button>
-        <button class="tab" onclick="switchTab('sentiment')">🎯 احساسات</button>
-        <button class="tab" onclick="switchTab('watchlist')">⭐ واچ‌لیست</button>
+        <button class="tab active" onclick="switchTab('market', this)">
+            <img class="anim-emoji" src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4ca/512.webp" alt="📊">
+            <span>بازار</span>
+        </button>
+        <button class="tab" onclick="switchTab('trends', this)">
+            <img class="anim-emoji" src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f525/512.webp" alt="🔥">
+            <span>ترندها</span>
+        </button>
+        <button class="tab" onclick="switchTab('misc', this)">
+            <img class="anim-emoji" src="https://fonts.gstatic.com/s/e/notoemoji/latest/1fa99/512.webp" alt="🪙">
+            <span>بازار متفرقه</span>
+        </button>
+        <button class="tab" onclick="switchTab('news', this)">
+            <img class="anim-emoji" src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f30d/512.webp" alt="🌍">
+            <span>اخبار</span>
+        </button>
+        <button class="tab" onclick="switchTab('watchlist', this)">
+            <img class="anim-emoji" src="https://fonts.gstatic.com/s/e/notoemoji/latest/2b50/512.webp" alt="⭐">
+            <span>واچ‌لیست</span>
+        </button>
     </div>
     
     <div class="results-count" id="resultsCount"></div>
     
-    <div class="tab-content active" id="market-tab"><div class="coin-list" id="marketList"><div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...</div></div></div>
-    <div class="tab-content" id="trends-tab"><div class="coin-list" id="trendsList"><div class="empty">در حال بارگذاری ترندها...</div></div></div>
-    <div class="tab-content" id="rsi-tab"><div class="coin-list" id="rsiList"><div class="empty">در حال بررسی RSI تایم ۴ ساعته...</div></div></div>
-    <div class="tab-content" id="oi-tab"><div class="coin-list" id="oiList"><div class="loading"><div class="spinner"></div>در حال دریافت Open Interest...</div></div></div>
-    <div class="tab-content" id="liquidation-tab"><div class="coin-list" id="liquidationList"><div class="loading"><div class="spinner"></div>در حال دریافت لیکوئید شدن‌ها...</div></div></div>
-    <div class="tab-content" id="sentiment-tab"><div class="coin-list" id="sentimentList"><div class="loading"><div class="spinner"></div>در حال دریافت احساسات بازار...</div></div></div>
-    <div class="tab-content" id="watchlist-tab"><div class="coin-list" id="watchlistList"><div class="empty-watchlist">⭐ هنوز ارزی اضافه نکردی!</div></div></div>
+    <!-- محتوای تب‌ها -->
+    <div class="tab-content active" id="market-tab">
+        <div class="coin-list" id="marketList"><div class="loading"><div class="spinner"></div>در حال دریافت ارزهای برتر بازار...</div></div>
+    </div>
+    <div class="tab-content" id="trends-tab">
+        <div class="coin-list" id="trendsList"></div>
+    </div>
+    <div class="tab-content" id="misc-tab">
+        <div class="coin-list" id="miscList"></div>
+    </div>
+    <div class="tab-content" id="news-tab">
+        <div class="coin-list" id="newsList"></div>
+    </div>
+    <div class="tab-content" id="watchlist-tab">
+        <div class="coin-list" id="watchlistList"></div>
+    </div>
 
 <script>
+    // لوگوی وکتور پیش‌فرض مشابه لوگوی آبی جدید شما (در صورتی که فایل logo.png هنوز کنار فایل نباشد)
+    const DEFAULT_LOGO_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#00c6ff"/>
+          <stop offset="55%" stop-color="#0072ff"/>
+          <stop offset="100%" stop-color="#002b7f"/>
+        </linearGradient>
+      </defs>
+      <rect width="120" height="120" rx="24" fill="#ffffff"/>
+      <path d="M24 20 H64 C90 20 104 38 104 60 C104 82 90 100 64 100 H24 Z" fill="none" stroke="url(#bg)" stroke-width="15" stroke-linejoin="round"/>
+      <rect x="34" y="68" width="11" height="24" rx="2" fill="url(#bg)"/>
+      <rect x="50" y="54" width="11" height="38" rx="2" fill="url(#bg)"/>
+      <rect x="66" y="38" width="12" height="54" rx="2" fill="url(#bg)"/>
+      <path d="M16 82 Q58 98 104 54" fill="none" stroke="#00b4ff" stroke-width="8" stroke-linecap="round"/>
+      <polygon points="108,48 94,52 103,63" fill="#00b4ff"/>
+    </svg>`);
+    document.getElementById('headerLogo').onerror = function() { this.src = DEFAULT_LOGO_SVG; };
+
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
-    
-    const API_URL = 'https://digitalcity-market.onrender.com/api';
-    
+
+    // اگر وب‌اپ گوگل اسکریپت را ساختید، لینک آن را اینجا قرار دهید (اختیاری - سیستم فال‌بک مستقیم هم فعال است)
+    const GAS_API_URL = ""; 
+
     function toggleMenu() { document.getElementById('sideMenu').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
     function closeMenu() { document.getElementById('sideMenu').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
-    
-    let currentTab = 'market', marketData = [], rsiData = {};
-    
-    function switchTab(tab) {
+
+    let currentTab = 'market', marketData = [];
+
+    function switchTab(tab, btnEl) {
         currentTab = tab;
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        event.target.closest('.tab').classList.add('active');
+        if (btnEl) btnEl.classList.add('active');
         document.getElementById(tab + '-tab').classList.add('active');
-        const searchBar = document.querySelector('.search-container'), resultsCount = document.getElementById('resultsCount');
-        if (tab === 'market' || tab === 'trends' || tab === 'rsi') { searchBar.classList.remove('hidden'); resultsCount.classList.remove('hidden'); }
-        else { searchBar.classList.add('hidden'); resultsCount.classList.add('hidden'); }
-        if (tab === 'market') { document.getElementById('searchInput').value = ''; if (marketData.length === 0) fetchAllCoins(); else { renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false); document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز لود شده`; } }
+
+        const searchBar = document.getElementById('searchContainer');
+        if (tab === 'market') searchBar.classList.remove('hidden');
+        else searchBar.classList.add('hidden');
+
+        if (tab === 'market') {
+            document.getElementById('searchInput').value = '';
+            if (marketData.length === 0) fetchAllCoins();
+            else {
+                renderCoins(marketData.slice(0, 100), document.getElementById('marketList'), false);
+                document.getElementById('resultsCount').innerHTML = `<span>📊 ${marketData.length} ارز آماده</span><span>بروزرسانی زنده</span>`;
+            }
+        }
         if (tab === 'trends') loadTrendsTab();
-        if (tab === 'rsi') loadRSITab();
-        if (tab === 'oi') loadOITab();
-        if (tab === 'liquidation') loadLiquidationTab();
-        if (tab === 'sentiment') loadSentimentTab();
+        if (tab === 'misc') loadMiscTab();
+        if (tab === 'news') loadNewsTab();
         if (tab === 'watchlist') loadWatchlist();
     }
-    
+
     function formatPrice(price) {
         if (price == null) return 'N/A';
         if (price >= 1) return '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         if (price >= 0.01) return '$' + price.toFixed(4);
         if (price >= 0.0001) return '$' + price.toFixed(6);
-        if (price >= 0.000001) return '$' + price.toFixed(8);
-        return '$' + price.toExponential(4);
+        return '$' + price.toFixed(8);
     }
-    
+
     function formatVolume(vol) {
         if (!vol) return 'N/A';
         if (vol >= 1e9) return '$' + (vol/1e9).toFixed(1) + 'B';
         if (vol >= 1e6) return '$' + (vol/1e6).toFixed(1) + 'M';
         if (vol >= 1e3) return '$' + (vol/1e3).toFixed(1) + 'K';
-        if (vol >= 1) return '$' + vol.toFixed(0);
-        if (vol >= 0.01) return '$' + vol.toFixed(4);
-        if (vol >= 0.0001) return '$' + vol.toFixed(6);
-        return '$' + vol.toFixed(8);
+        return '$' + vol.toFixed(0);
     }
-    
+
+    // دریافت سریع ارزها (ابتدا ۲۵۰ ارز اول را در کمتر از ۱ ثانیه نمایش می‌دهد و بقیه را در پس‌زمینه کامل می‌کند)
     async function fetchAllCoins() {
         const container = document.getElementById('marketList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت ۱۰۰۰ ارز برتر...<br><small>ممکن است ۱۰ ثانیه طول بکشد</small></div>';
+        const cached = localStorage.getItem('dc_market_cache_v2');
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                if (parsed.data && parsed.data.length) {
+                    marketData = parsed.data;
+                    renderCoins(marketData.slice(0, 100), container, false);
+                    document.getElementById('resultsCount').innerHTML = `<span>⚡ ${marketData.length} ارز بارگذاری شد</span>`;
+                }
+            } catch (e) {}
+        }
+
         try {
-            const pages = [1,2,3,4];
-            const results = await Promise.all(pages.map(page => fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false&price_change_percentage=24h`).then(r => r.json())));
-            marketData = results.flat();
-            localStorage.setItem('dc_market_cache', JSON.stringify({data: marketData, time: Date.now()}));
+            const res1 = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h');
+            if (!res1.ok) throw new Error('Rate limit');
+            const page1 = await res1.json();
+            marketData = page1;
             renderCoins(marketData.slice(0, 100), container, false);
-            document.getElementById('resultsCount').innerHTML = `📊 ۱۰۰۰ ارز لود شد`;
-            if (marketData.length > 100) { const d = document.createElement('div'); d.className = 'load-more'; d.id = 'loadMoreBtn'; d.innerHTML = '<button onclick="showAll()">📥 نمایش همه ۱۰۰۰ ارز</button>'; container.appendChild(d); }
-        } catch(e) {
-            const cache = localStorage.getItem('dc_market_cache');
-            if (cache) { const p = JSON.parse(cache); marketData = p.data; renderCoins(marketData.slice(0, 100), container, false); document.getElementById('resultsCount').innerHTML = `⚠️ داده‌های ذخیره‌شده - ${marketData.length} ارز`; }
-            else container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>';
+            document.getElementById('resultsCount').innerHTML = `<span>📊 ۲۵۰ ارز برتر لود شد (در حال تکمیل ۱۰۰۰ ارز...)</span>`;
+
+            // دریافت صفحات ۲ تا ۴ با فاصله کوتاه برای جلوگیری از بلاک شدن توسط CoinGecko
+            for (let p = 2; p <= 4; p++) {
+                await new Promise(r => setTimeout(r, 1200));
+                const rNext = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${p}&sparkline=false&price_change_percentage=24h`);
+                if (rNext.ok) {
+                    const pData = await rNext.json();
+                    if (Array.isArray(pData)) marketData = marketData.concat(pData);
+                }
+            }
+            localStorage.setItem('dc_market_cache_v2', JSON.stringify({ data: marketData, time: Date.now() }));
+            if (currentTab === 'market') {
+                document.getElementById('resultsCount').innerHTML = `<span>📊 ${marketData.length} ارز برتر بازار</span>`;
+                appendShowAllBtn(container);
+            }
+        } catch (e) {
+            if (!marketData.length) {
+                container.innerHTML = '<div class="empty">⚠️ خطا در ارتباط با سرور قیمت‌ها. لطفاً چند ثانیه دیگر تلاش کنید.</div>';
+            }
         }
     }
-    
-    function showAll() { const c = document.getElementById('marketList'); document.getElementById('loadMoreBtn')?.remove(); renderCoins(marketData, c, false); document.getElementById('resultsCount').innerHTML = `📊 نمایش همه ${marketData.length} ارز`; }
-    
-    function getRSIBadge(rsi) {
-        if (rsi == null) return '';
-        if (rsi >= 65) return `<span class="rsi-badge rsi-overbought">RSI ${rsi.toFixed(0)}</span>`;
-        if (rsi <= 35) return `<span class="rsi-badge rsi-oversold">RSI ${rsi.toFixed(0)}</span>`;
-        return '';
+
+    function appendShowAllBtn(container) {
+        if (marketData.length > 100 && !document.getElementById('loadMoreBtn')) {
+            const d = document.createElement('div');
+            d.className = 'load-more';
+            d.id = 'loadMoreBtn';
+            d.innerHTML = `<button onclick="showAll()">📥 نمایش همه ${marketData.length} ارز</button>`;
+            container.appendChild(d);
+        }
     }
-    
-    function coinHTML(coin, change, isUp, inWatchlist, isWatchlist, rsi) {
-        if (isWatchlist === undefined) isWatchlist = false;
-        if (rsi === undefined) rsi = null;
-        const rsiBadge = getRSIBadge(rsi);
-        return `<div class="coin-card"><div class="coin-rank">${coin.market_cap_rank || '-'}</div><img class="coin-icon" src="${coin.image}" alt="${coin.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%238b5cf6%22/><text x=%2216%22 y=%2220%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2212%22>${coin.symbol?.charAt(0)?.toUpperCase()||'?'}</text></svg>'"><div class="coin-info"><div class="coin-name">${rsiBadge}${coin.name}</div><div class="coin-symbol">${coin.symbol?.toUpperCase()}</div></div><div class="coin-price"><div class="price">${formatPrice(coin.current_price)}</div><div class="change ${isUp?'up':'down'}">${isUp?'+':''}${change?.toFixed(2)||'0.00'}%</div></div>${isWatchlist ? `<button class="star-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeWatchlist('${coin.id}')">🗑️</button>` : `<button class="star-btn ${inWatchlist?'starred':''}" onclick="toggleWatchlist('${coin.id}','${coin.name}','${coin.symbol?.toUpperCase()}','${coin.image}')">⭐</button>`}<div class="coin-volume"><span>📊 حجم: ${formatVolume(coin.total_volume)}</span><span>💰 مارکت کپ: ${formatVolume(coin.market_cap)}</span></div></div>`;
+
+    function showAll() {
+        const c = document.getElementById('marketList');
+        document.getElementById('loadMoreBtn')?.remove();
+        renderCoins(marketData, c, false);
     }
-    
-    function filterCoins() {
-        const term = document.getElementById('searchInput').value.trim().toLowerCase(), container = document.getElementById('marketList');
-        if (!term) { renderCoins(marketData.slice(0, 100), container, false); document.getElementById('resultsCount').innerHTML = `📊 ${marketData.length} ارز`; return; }
-        const filtered = marketData.filter(c => c.name.toLowerCase().includes(term) || c.symbol.toLowerCase().includes(term));
-        if (filtered.length > 0) { document.getElementById('resultsCount').innerHTML = `🔍 ${filtered.length} ارز پیدا شد`; renderCoins(filtered, container, false); }
-        else { container.innerHTML = '<div class="empty">❌ هیچ ارزی پیدا نشد</div>'; document.getElementById('resultsCount').innerHTML = ''; }
+
+    function coinHTML(coin, change, isUp, inWatchlist, isWatchlist) {
+        return `<div class="coin-card">
+            <div class="coin-rank">${coin.market_cap_rank || '-'}</div>
+            <img class="coin-icon" src="${coin.image}" alt="${coin.name}" loading="lazy">
+            <div class="coin-info">
+                <div class="coin-name">${coin.name}</div>
+                <div class="coin-symbol">${coin.symbol?.toUpperCase()}</div>
+            </div>
+            <div class="coin-price">
+                <div class="price">${formatPrice(coin.current_price)}</div>
+                <div class="change ${isUp ? 'up' : 'down'}">${isUp ? '+' : ''}${(change || 0).toFixed(2)}%</div>
+            </div>
+            ${isWatchlist
+                ? `<button class="star-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeWatchlist('${coin.id}')">🗑️</button>`
+                : `<button class="star-btn ${inWatchlist ? 'starred' : ''}" onclick="toggleWatchlist('${coin.id}','${coin.name.replace(/'/g,"")}','${coin.symbol?.toUpperCase()}','${coin.image}')">⭐</button>`
+            }
+            <div class="coin-volume">
+                <span>📊 حجم ۲۴h: ${formatVolume(coin.total_volume)}</span>
+                <span>💰 مارکت‌کپ: ${formatVolume(coin.market_cap)}</span>
+            </div>
+        </div>`;
     }
-    
-    function renderCoins(coins, container, isWatchlist, withRSI) {
-        if (isWatchlist === undefined) isWatchlist = false;
-        if (withRSI === undefined) withRSI = false;
+
+    function renderCoins(coins, container, isWatchlist = false) {
         if (!coins.length) { container.innerHTML = '<div class="empty">هیچ ارزی پیدا نشد</div>'; return; }
-        const watchlist = getWatchlist(); let html = '';
-        coins.forEach(coin => { const change = coin.price_change_percentage_24h, isUp = change >= 0, inWatchlist = watchlist.some(w => w.id === coin.id), rsi = withRSI ? (rsiData[coin.id] || null) : null; html += coinHTML(coin, change, isUp, inWatchlist, isWatchlist, rsi); });
+        const watchlist = getWatchlist();
+        let html = '';
+        coins.forEach(coin => {
+            const change = coin.price_change_percentage_24h || 0;
+            const inWatchlist = watchlist.some(w => w.id === coin.id);
+            html += coinHTML(coin, change, change >= 0, inWatchlist, isWatchlist);
+        });
         container.innerHTML = html;
+        if (!isWatchlist && currentTab === 'market' && coins.length === 100) appendShowAllBtn(container);
     }
-    
+
+    function filterCoins() {
+        const term = document.getElementById('searchInput').value.trim().toLowerCase();
+        const container = document.getElementById('marketList');
+        if (!term) {
+            renderCoins(marketData.slice(0, 100), container, false);
+            document.getElementById('resultsCount').innerHTML = `<span>📊 ${marketData.length} ارز</span>`;
+            return;
+        }
+        const filtered = marketData.filter(c => c.name.toLowerCase().includes(term) || c.symbol.toLowerCase().includes(term));
+        document.getElementById('resultsCount').innerHTML = `<span>🔍 ${filtered.length} نتیجه یافت شد</span>`;
+        renderCoins(filtered, container, false);
+    }
+
+    // تب ترندها
     function loadTrendsTab() {
         const container = document.getElementById('trendsList');
-        if (!marketData.length) { container.innerHTML = '<div class="empty">⏳ ابتدا تب بازار را باز کنید</div>'; return; }
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال مرتب‌سازی...</div>';
-        setTimeout(() => {
-            const sorted = [...marketData].filter(c => c.price_change_percentage_24h != null);
-            const gainers = sorted.sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0,10);
-            const losers = sorted.sort((a,b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0,10);
-            let html = '<div class="section-title" style="color:var(--green)">۱۰ ارز با بیشترین افزایش</div>';
-            gainers.forEach(c => { const ch = c.price_change_percentage_24h; html += coinHTML(c, ch, ch>=0, getWatchlist().some(w=>w.id===c.id)); });
-            html += '<div class="section-title" style="color:var(--red);margin-top:24px">۱۰ ارز با بیشترین کاهش</div>';
-            losers.forEach(c => { const ch = c.price_change_percentage_24h; html += coinHTML(c, ch, ch>=0, getWatchlist().some(w=>w.id===c.id)); });
-            container.innerHTML = html; document.getElementById('resultsCount').innerHTML = '🔥 ترندهای ۲۴ ساعته';
-        }, 50);
+        document.getElementById('resultsCount').innerHTML = '<span>🔥 بیشترین رشد و ریزش ۲۴ ساعت اخیر</span>';
+        if (!marketData.length) { container.innerHTML = '<div class="empty">⏳ در حال دریافت اطلاعات بازار...</div>'; return; }
+        const valid = [...marketData].filter(c => c.price_change_percentage_24h != null);
+        const gainers = [...valid].sort((a,b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 10);
+        const losers = [...valid].sort((a,b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 10);
+
+        let html = '<div class="section-title" style="color:var(--green)">🚀 ۱۰ ارز با بیشترین سود ۲۴ ساعته</div>';
+        gainers.forEach(c => html += coinHTML(c, c.price_change_percentage_24h, true, getWatchlist().some(w => w.id === c.id), false));
+        html += '<div class="section-title" style="color:var(--red);margin-top:22px">📉 ۱۰ ارز با بیشترین افت ۲۴ ساعته</div>';
+        losers.forEach(c => html += coinHTML(c, c.price_change_percentage_24h, false, getWatchlist().some(w => w.id === c.id), false));
+        container.innerHTML = html;
     }
-    
-    function calculateRSI(closes, period) {
-        if (period === undefined) period = 14;
-        if (closes.length < period + 1) return null;
-        let gains = 0, losses = 0;
-        for (let i = 1; i <= period; i++) { const diff = closes[i] - closes[i-1]; if (diff >= 0) gains += diff; else losses -= diff; }
-        let avgGain = gains / period, avgLoss = losses / period;
-        if (avgLoss === 0) return 100;
-        let rs = avgGain / avgLoss, rsi = 100 - (100 / (1 + rs));
-        for (let i = period + 1; i < closes.length; i++) {
-            const diff = closes[i] - closes[i-1];
-            avgGain = (avgGain * (period - 1) + (diff >= 0 ? diff : 0)) / period;
-            avgLoss = (avgLoss * (period - 1) + (diff < 0 ? -diff : 0)) / period;
-            if (avgLoss === 0) return 100;
-            rsi = 100 - (100 / (1 + (avgGain / avgLoss)));
-        }
-        return rsi;
-    }
-    
-    async function loadRSITab() {
-        const container = document.getElementById('rsiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بررسی RSI برای ۳۰۰ ارز برتر...<br><small>ممکن است ۴۵ ثانیه طول بکشد</small></div>';
-        document.getElementById('resultsCount').innerHTML = '📊 در حال محاسبه RSI...';
-        if (!marketData.length) { container.innerHTML = '<div class="empty">⏳ ابتدا تب بازار را باز کنید</div>'; return; }
-        const stablecoins = ['tether', 'usd-coin', 'dai', 'binance-usd', 'true-usd', 'paxos-standard', 'usdd', 'frax'];
-        const filtered = marketData.filter(c => !stablecoins.includes(c.id)).slice(0, 300);
-        const rsiResults = {}, batchSize = 5;
-        for (let i = 0; i < filtered.length; i += batchSize) {
-            const batch = filtered.slice(i, i + batchSize);
-            const promises = batch.map(async (coin) => {
-                try {
-                    const symbol = coin.symbol.toUpperCase() + 'USDT';
-                    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=4h&limit=15`);
-                    const data = await res.json();
-                    if (data && data.length >= 15 && !data.code) { const closes = data.map(d => parseFloat(d[4])); const rsi = calculateRSI(closes, 14); if (rsi != null) rsiResults[coin.id] = rsi; }
-                } catch(e) {}
-            });
-            await Promise.all(promises);
-            const done = Math.min(i + batchSize, filtered.length);
-            container.innerHTML = `<div class="loading"><div class="spinner"></div>در حال محاسبه RSI از Binance...<br><small>${done} از ${filtered.length} ارز بررسی شد (${Object.keys(rsiResults).length} پیدا شد)</small></div>`;
-        }
-        rsiData = rsiResults;
-        const alertCoins = filtered.filter(c => { const rsi = rsiResults[c.id]; return rsi != null && (rsi >= 65 || rsi <= 35); }).sort((a,b) => (rsiResults[b.id]||0) - (rsiResults[a.id]||0));
-        if (alertCoins.length > 0) { document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${alertCoins.length} ارز در محدوده اشباع`; renderCoins(alertCoins, container, false, true); }
-        else { container.innerHTML = `<div class="empty">✅ هیچ ارزی در محدوده اشباع نیست<br><small>${Object.keys(rsiResults).length} از ${filtered.length} ارز بررسی شد</small></div>`; document.getElementById('resultsCount').innerHTML = `📊 RSI (۴h) - ${filtered.length} ارز بررسی شد`; }
-    }
-    
-    async function loadOITab() {
-        const container = document.getElementById('oiList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت Open Interest...</div>';
+
+    // تب بازار متفرقه (تتر به تومان، انس طلا، انس نقره، نفت برنت و WTI)
+    async function loadMiscTab() {
+        const container = document.getElementById('miscList');
+        document.getElementById('resultsCount').innerHTML = '<span>🪙 نرخ لحظه‌ای تتر، طلا، نقره و انرژی</span>';
+        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت نرخ‌های بازار متفرقه...</div>';
+
+        let misc = {
+            tether_irt: { price: 0, change: 0 },
+            gold_oz: { price: 0, change: 0 },
+            silver_oz: { price: 0, change: 0 },
+            brent_oil: { price: 0, change: 0 },
+            wti_oil: { price: 0, change: 0 }
+        };
+
         try {
-            const res = await fetch(`${API_URL}/coinglass/open-interest`);
-            const data = await res.json();
-            if (data?.data && data.data.length > 0) {
-                let html = '<div class="section-title">📊 Open Interest - تحلیل ورود/خروج پول</div>';
-                data.data.forEach(item => {
-                    const oiUsd = item.openInterestUsd || 0;
-                    const changePct = item.change_pct || 0;
-                    const direction = item.direction || 'خنثی';
-                    const colorClass = changePct >= 0 ? 'up' : 'down';
-                    const arrow = changePct >= 0 ? '🟢' : '🔴';
-                    
-                    html += `<div class="derivatives-card">
-                        <div class="derivatives-title">${arrow} ${item.symbol}</div>
-                        <div class="derivatives-row"><span class="derivatives-label">Open Interest</span><span class="derivatives-value">$${formatVolume(oiUsd)}</span></div>
-                        <div class="derivatives-row"><span class="derivatives-label">تغییر قیمت ۲۴h</span><span class="derivatives-value ${colorClass}">${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%</span></div>
-                        <div class="derivatives-row"><span class="derivatives-label">سیگنال</span><span class="derivatives-value ${colorClass}">${direction}</span></div>
-                    </div>`;
-                });
-                container.innerHTML = html || '<div class="empty">❌ داده‌ای پیدا نشد</div>';
-                document.getElementById('resultsCount').innerHTML = '📊 Open Interest (OKX) - تحلیل جریان پول';
-            } else {
-                container.innerHTML = `<div class="empty">❌ ${data?.error || 'خطا در دریافت داده‌ها'}</div>`;
-            }
-        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت Open Interest</div>'; }
-    }
-    
-    async function loadLiquidationTab() {
-        const container = document.getElementById('liquidationList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت لیکوئید شدن‌ها...</div>';
-        try {
-            const res = await fetch(`${API_URL}/coinglass/liquidation`);
-            const data = await res.json();
-            if (data?.data) {
-                let html = '<div class="section-title">🔥 لیکوئید شدن‌های اخیر (OKX)</div>';
-                const d = data.data;
-                const total = d.total || {};
-                html += `<div class="derivatives-card"><div class="derivatives-title">کل بازار</div><div class="derivatives-row"><span class="derivatives-label">لیکوئید لانگ</span><span class="derivatives-value liq-long">$${formatVolume(total.long || 0)}</span></div><div class="derivatives-row"><span class="derivatives-label">لیکوئید شورت</span><span class="derivatives-value liq-short">$${formatVolume(total.short || 0)}</span></div></div>`;
-                if (d.symbols && d.symbols.length > 0) {
-                    d.symbols.forEach(s => {
-                        const longLiq = s.total?.long || 0;
-                        const shortLiq = s.total?.short || 0;
-                        html += `<div class="liquidation-card"><strong>${s.symbol || ''}</strong><br><span class="liq-long">لانگ: $${formatVolume(longLiq)}</span> | <span class="liq-short">شورت: $${formatVolume(shortLiq)}</span></div>`;
-                    });
-                }
-                container.innerHTML = html;
-                document.getElementById('resultsCount').innerHTML = '🔥 لیکوئید شدن‌های اخیر';
-            } else {
-                container.innerHTML = `<div class="empty">❌ ${data?.error || 'داده‌ای پیدا نشد'}</div>`;
-            }
-        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>'; }
-    }
-    
-    async function loadSentimentTab() {
-        const container = document.getElementById('sentimentList');
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال دریافت احساسات بازار...</div>';
-        try {
-            const res = await fetch(`${API_URL}/coinglass/sentiment`);
-            const data = await res.json();
-            if (data?.data && data.data.length > 0) {
-                const d = data.data[0];
-                const value = d.value || 50;
-                const label = d.label || 'خنثی';
-                const color = value >= 60 ? 'var(--green)' : value <= 40 ? 'var(--red)' : 'var(--gold)';
-                let html = `<div class="fear-greed-card"><div class="fear-greed-label">شاخص ترس و طمع</div><div class="fear-greed-value" style="color:${color}">${value}</div><div class="fear-greed-label">${label}</div></div>`;
-                container.innerHTML = html;
-                document.getElementById('resultsCount').innerHTML = '🎯 احساسات بازار';
-            } else {
-                container.innerHTML = `<div class="empty">❌ ${data?.error || 'داده‌ای پیدا نشد'}</div>`;
-            }
-        } catch(e) { container.innerHTML = '<div class="empty">⚠️ خطا در دریافت داده‌ها</div>'; }
-    }
-    
-    function getWatchlist() { return JSON.parse(localStorage.getItem('dc_watchlist') || '[]'); }
-    function saveWatchlist(list) { localStorage.setItem('dc_watchlist', JSON.stringify(list)); }
-    
-    function toggleWatchlist(id, name, symbol, image) {
-        let list = getWatchlist(); const idx = list.findIndex(w => w.id === id);
-        if (idx > -1) list.splice(idx, 1); else list.push({id, name, symbol, image});
-        saveWatchlist(list);
-        const userId = tg?.initDataUnsafe?.user?.id || 'demo';
-        if (idx > -1) fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
-        else fetch(`${API_URL}/watchlist/${userId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({id, name, symbol, image}) }).catch(()=>{});
-        if (currentTab === 'watchlist') loadWatchlist();
-        else if (currentTab === 'market') filterCoins();
-        else if (currentTab === 'trends') loadTrendsTab();
-        else if (currentTab === 'rsi') loadRSITab();
-    }
-    
-    function removeWatchlist(id) {
-        let list = getWatchlist(); list = list.filter(w => w.id !== id); saveWatchlist(list);
-        const userId = tg?.initDataUnsafe?.user?.id || 'demo';
-        fetch(`${API_URL}/watchlist/${userId}/${id}`, { method: 'DELETE' }).catch(()=>{});
-        loadWatchlist();
-        if (currentTab === 'market') filterCoins();
-        if (currentTab === 'trends') loadTrendsTab();
-        if (currentTab === 'rsi') loadRSITab();
-    }
-    
-    function loadWatchlist() {
-        const container = document.getElementById('watchlistList'), list = getWatchlist();
-        if (!list.length) { container.innerHTML = '<div class="empty-watchlist">⭐ هنوز ارزی اضافه نکردی!</div>'; return; }
-        container.innerHTML = '<div class="loading"><div class="spinner"></div>در حال بارگذاری...</div>';
-        const ids = list.map(w => w.id).join('%2C');
-        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`)
-            .then(r => r.json())
-            .then(data => {
-                if (data && data.length) renderCoins(data, container, true);
-                else { const ids_set = new Set(list.map(w => w.id)); const filtered = marketData.filter(c => ids_set.has(c.id)); renderCoins(filtered.length ? filtered : [], container, true); }
-            })
-            .catch(() => { const ids_set = new Set(list.map(w => w.id)); const filtered = marketData.filter(c => ids_set.has(c.id)); renderCoins(filtered.length ? filtered : [], container, true); });
-    }
-    
-    fetchAllCoins();
-</script>
-</body>
-</html>
+            if
